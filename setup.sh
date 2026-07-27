@@ -83,7 +83,8 @@ install_desktop(){
 		xorg i3 kitty \
 		lightdm lightdm-gtk-greeter \
 		rofi polybar picom dunst libnotify-bin feh unzip \
-		network-manager network-manager-gnome		
+		network-manager network-manager-gnome \
+		firefox-esr autorandr arandr		
 	ok "escritorio base instalado"
 
 }
@@ -125,6 +126,7 @@ link_dotfiles(){
 	link_config "zsh/.zshrc"	"$HOME/.zshrc"
 	link_config "kitty/kitty.conf"	"$HOME/.config/kitty/kitty.conf"
 	link_config "rofi/config.rasi"	"$HOME/.config/rofi/config.rasi"
+	link_config "autorandr/postswitch"	"$HOME/.config/autorandr/postswitch"
 }
 
 install_nerd_font(){

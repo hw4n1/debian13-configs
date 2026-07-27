@@ -190,3 +190,4 @@ bar {
 }
 exec_always --no-startuṕ-id picom --config ~/.config/picom/picom.conf
 exec_always --no-startup-id ~/.config/polybar/launch.sh
+exec_always --no-startup-id autorandr --change --default horizontal
