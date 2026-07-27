@@ -77,7 +77,37 @@ install_desktop(){
 		network-manager network-manager-gnome
 	ok "escritoro base instalado"
 
+}
 
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+link_config(){
+	local src="${REPO_DIR}/config/$1"
+	local dest="$2"
+
+	[[ -e "$src" ]] || { warn "no existe en el repo: $src"; return 1; }
+
+	if [[ -L "$dest" && "$(readlink -f "$dest")" == "$src" ]]; then
+		ok "ya enlazado: $dest"
+		return 0
+	fi
+
+
+	if [[ -e "$dest" || -L "$dest" ]]; then
+		local bak="${dest}.bak-$(date +%s)"
+		warn "backup de $dest -> $bak"
+		mv "$dest" "$bak"
+	fi
+
+	mkdir -p "$(dirname "$dest")"
+	ln -s "$src" "$dest"
+	ok "enlazado: $dest -> $src"
+
+}
+
+link_dotfiles(){
+	log "enlazado dotfiles..."
+	link_config "i3/config" "$HOME/.config/i3/config"
 }
 
 main() {
@@ -85,6 +115,7 @@ main() {
 	enable_repos
 	apt_install curl git
 	install_desktop
+	link_dotfiles
 	ok "Todo listo."
 }
 
