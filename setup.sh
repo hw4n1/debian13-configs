@@ -107,7 +107,10 @@ link_config(){
 
 link_dotfiles(){
 	log "enlazado dotfiles..."
-	link_config "i3/config" "$HOME/.config/i3/config"
+	link_config "i3/config"	"$HOME/.config/i3/config"
+	link_config "polybar/config.ini"	"$HOME/.config/polybar/config.ini"
+	link_config "polybar/launch.sh"	"$HOME/.config/polybar/launch.sh"
+	link_config "polybar/vpn.sh"	"$HOME/.config/polybar/vpn.sh"
 }
 
 main() {
