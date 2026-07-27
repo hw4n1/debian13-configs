@@ -68,10 +68,23 @@ enable_repos() {
 
 }
 
+install_desktop(){
+	log "instalando entorno grafico i3..."
+	apt_install \
+		xorg i3 kitty \
+		lightdm lightdm-gtk-greeter \
+		rofi polybar picom dunst feh \
+		network-manager network-manager-gnome
+	ok "escritoro base instalado"
+
+
+}
+
 main() {
 	log "Arrancando setup..."
 	enable_repos
 	apt_install curl git
+	install_desktop
 	ok "Todo listo."
 }
 
