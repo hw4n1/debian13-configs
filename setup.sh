@@ -73,8 +73,8 @@ install_desktop(){
 	apt_install \
 		xorg i3 kitty \
 		lightdm lightdm-gtk-greeter \
-		rofi polybar picom dunst feh \
-		network-manager network-manager-gnome
+		rofi polybar picom dunst libnotify-bin feh unzip \
+		network-manager network-manager-gnome		
 	ok "escritoro base instalado"
 
 }
@@ -112,6 +112,32 @@ link_dotfiles(){
 	link_config "polybar/launch.sh"	"$HOME/.config/polybar/launch.sh"
 	link_config "polybar/vpn.sh"	"$HOME/.config/polybar/vpn.sh"
 	link_config "picom/picom.conf"	"$HOME/.config/picom/picom.conf"
+	link_config "dunst/dunstrc"	"$HOME/.config/dunst/dunstrc"
+}
+
+install_nerd_font(){
+	local font="JetBrainsMono"
+	local fontdir="$HOME/.local/share/fonts/${font}"
+
+	if fc-list 2>/dev/null | grep -qi "${font} Nerd Font"; then
+		ok "Nerd Font ya instalada"
+		return 0
+	fi
+
+	log "descargando ${font} Nerd Font..."
+	local url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/${font}.zip"
+	local tmp="/tmp/${font}.zip"
+
+	if ! curl -fsSL "$url" -o "$tmp"; then
+		warn "no se pudo descargar la fuente (¿sin red?); polybar seguirá con texto"
+		return 1
+	fi
+
+	mkdir -p "$fontdir"
+	unzip -oq "$tmp" -d "$fontdir"
+	fc-cache -f "$fontdir" >/dev/null
+	rm -f "$tmp"
+	ok "Nerd Font instalada"
 }
 
 main() {
@@ -119,6 +145,7 @@ main() {
 	enable_repos
 	apt_install curl git
 	install_desktop
+	install_nerd_font
 	link_dotfiles
 	ok "Todo listo."
 }
