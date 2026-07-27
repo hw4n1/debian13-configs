@@ -68,6 +68,15 @@ enable_repos() {
 
 }
 
+install_shell(){
+	log "instalando CLI..."
+	apt_install \
+		zsh zsh-autosuggestions zsh-syntax-highlighting
+	ok "zsh instalado"
+}
+
+
+
 install_desktop(){
 	log "instalando entorno grafico i3..."
 	apt_install \
@@ -75,7 +84,7 @@ install_desktop(){
 		lightdm lightdm-gtk-greeter \
 		rofi polybar picom dunst libnotify-bin feh unzip \
 		network-manager network-manager-gnome		
-	ok "escritoro base instalado"
+	ok "escritorio base instalado"
 
 }
 
@@ -113,6 +122,7 @@ link_dotfiles(){
 	link_config "polybar/vpn.sh"	"$HOME/.config/polybar/vpn.sh"
 	link_config "picom/picom.conf"	"$HOME/.config/picom/picom.conf"
 	link_config "dunst/dunstrc"	"$HOME/.config/dunst/dunstrc"
+	link_config "zsh/.zshrc"	"$HOME/.zshrc"
 }
 
 install_nerd_font(){
@@ -140,13 +150,25 @@ install_nerd_font(){
 	ok "Nerd Font instalada"
 }
 
+set_default_shell(){
+	if [[ "$(getent passwd "$USER" | cut -d: -f7)" == *zsh ]]; then
+		ok "zsh ya es el shell por defecto"
+		return 0
+	fi
+	grep -q "$(command -v zsh)" /etc/shells || command -v zsh | sudo tee -a /etc/shells >/dev/null
+	chsh -s "$(command -v zsh)" && ok "shell ha cambiado a zsh (aplicaa al reiniciar sesión gráfica)"
+}
+
+
 main() {
 	log "Arrancando setup..."
 	enable_repos
 	apt_install curl git
+	install_shell
 	install_desktop
 	install_nerd_font
 	link_dotfiles
+	set_default_shell
 	ok "Todo listo."
 }
 
