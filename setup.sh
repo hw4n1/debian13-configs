@@ -111,6 +111,7 @@ link_dotfiles(){
 	link_config "polybar/config.ini"	"$HOME/.config/polybar/config.ini"
 	link_config "polybar/launch.sh"	"$HOME/.config/polybar/launch.sh"
 	link_config "polybar/vpn.sh"	"$HOME/.config/polybar/vpn.sh"
+	link_config "picom/picom.conf"	"$HOME/.config/picom/picom.conf"
 }
 
 main() {

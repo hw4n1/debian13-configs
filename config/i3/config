@@ -188,3 +188,4 @@ bindsym $mod+r mode "resize"
 bar {
         status_command i3status
 }
+exec_always --no-startuṕ-id picom --config ~/.config/picom/picom.conf
