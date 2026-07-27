@@ -5,7 +5,7 @@ setopt HIST_IGNORE_DUPS
 setopt SHARE_HISTORY
 setopt INC_APPEND_HISTORY
 
-autoload -uZ compinit && compinit
+autoload -Uz compinit && compinit
 zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 
@@ -15,7 +15,8 @@ autoload -Uz colors && colors
 git_branch(){
 	local branch
 	branch=$(git symbolic-ref --short HEAD 2>/dev/null) || return
-	echo " %F{yellow} -> ${branch}%f"
+	local icon=$'\ue0a0'
+	echo " %F{yellow}${icon} ${branch}%f"
 }
 
 setopt PROMPT_SUBST
