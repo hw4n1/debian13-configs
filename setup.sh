@@ -123,6 +123,7 @@ link_dotfiles(){
 	link_config "picom/picom.conf"	"$HOME/.config/picom/picom.conf"
 	link_config "dunst/dunstrc"	"$HOME/.config/dunst/dunstrc"
 	link_config "zsh/.zshrc"	"$HOME/.zshrc"
+	link_config "kitty/kitty.conf"	"$HOME/.config/kitty/kitty.conf"
 }
 
 install_nerd_font(){
