@@ -54,6 +54,12 @@ bindsym $mod+Return exec i3-sensible-terminal
 # kill focused window
 bindsym $mod+Shift+q kill
 
+bindsym $mod+Shift+Return exec --no-startup-id kitty --class scratchpad
+for_window [class="scratchpad"] move scratchpad, resize set 1100 650
+bindsym $mod+minus scratchpad show
+
+bindsym $mod+c exec --no-startup-id rofi -modi "clipboard:greenclip print" -show clipboard
+
 # start dmenu (a program launcher)
 bindsym $mod+d exec --no-startup-id rofi -show drun
 # A more modern dmenu replacement is rofi:
@@ -191,3 +197,5 @@ bar {
 exec_always --no-startuṕ-id picom --config ~/.config/picom/picom.conf
 exec_always --no-startup-id ~/.config/polybar/launch.sh
 exec_always --no-startup-id autorandr --change --default horizontal
+exec_always --no-startup-id feh --bg-scale ~/.config/wallpapers/angel.jpg
+exec_always --no-startup-id ~/go/bin/greenclip daemon

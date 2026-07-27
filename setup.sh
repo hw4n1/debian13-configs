@@ -127,6 +127,7 @@ link_dotfiles(){
 	link_config "kitty/kitty.conf"	"$HOME/.config/kitty/kitty.conf"
 	link_config "rofi/config.rasi"	"$HOME/.config/rofi/config.rasi"
 	link_config "autorandr/postswitch"	"$HOME/.config/autorandr/postswitch"
+	link_config "wallpapers/angel.jpg"	"$HOME/.config/wallpapers/angel.jpg"
 }
 
 install_nerd_font(){
