@@ -1,0 +1,49 @@
+configuration {
+	modi: "drun,run,window";
+	show-icons: true;
+	icon-theme: "Papirus";
+	display-drun: " ";
+	display-run: " ";
+	display-window: " ";
+	drun-display-format: "{name}";
+}
+
+* {
+	bg:	#1e1e2e;
+	bg-alt:	#313244;
+	fg:	#cdd6f4;
+	accent:	#cba6f7;
+
+	background-color:	transparent;
+	text-color:	@fg;
+	font:	"JetBrainsMono Nerd Font 11";
+}
+
+window {
+	background-color:	@bg;
+	border:	2px;
+	border-color:	@accent;
+	border-radius:	12px;
+	width:	620px;
+	padding:	16px;
+}
+
+inputbar {
+	background-color:	@bg-alt;
+	border-radius:	8px;
+	padding:	10px;
+	spacing:	8px;
+	children:	[ prompt, entry ];
+}
+
+prompt { text-color: @accent; }
+entry { placeholder: "Buscar..."; placeholder-color: #6c7086; }
+
+listview { lines: 8; spacing: 4px; padding: 12px 0 0 0; }
+
+element { padding: 8px; border-radius: 8px; }
+element selected {
+	background-color: @accent;
+	text-color: @bg;
+}
+element-icon { size: 22px; }

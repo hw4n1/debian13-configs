@@ -124,6 +124,7 @@ link_dotfiles(){
 	link_config "dunst/dunstrc"	"$HOME/.config/dunst/dunstrc"
 	link_config "zsh/.zshrc"	"$HOME/.zshrc"
 	link_config "kitty/kitty.conf"	"$HOME/.config/kitty/kitty.conf"
+	link_config "rofi/config.rasi"	"$HOME/.config/rofi/config.rasi"
 }
 
 install_nerd_font(){
