@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
 # lib/common.sh
 
-set -euo pipefail
-
 log()	{ printf '[*] %s\n' "$*"; }
 ok()	{ printf '[*] %s\n' "$*"; }
 warn()	{ printf '[*] %s\n' "$*" >&2; }
 die()	{ printf '[*] %s\n' "$*" >&2; exit 1; }
-
-[[ $EUID -ne 0 ]] || die "No los corras como root"
 
 pkg_installed(){
 	dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"
