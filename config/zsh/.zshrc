@@ -28,5 +28,7 @@ source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/nul
 alias ll='ls -lah --color=auto'
 alias grep='grep --color=auto'
 alias ..='cd ..'
+alias kali='docker run -it --rm -v "$PWD":/work kalilinux/kali-rolling'
+
 export PATH="$HOME/go/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"

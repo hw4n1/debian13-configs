@@ -31,3 +31,6 @@ jq
 git
 golang-go
 pipx
+#Contenedores
+docker.io
+docker-compose

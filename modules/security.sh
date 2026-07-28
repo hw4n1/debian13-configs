@@ -60,10 +60,28 @@ security_pipx() {
   done
 }
 
+security_docker() {
+  log "configurando Docker..."
+
+  if systemctl is-active --quiet docker; then
+    ok "servicio docker ya activo"
+  else
+    sudo systemctl enable --now docker && ok "servicio docker activado"
+  fi
+
+  if id -nG "$USER" | grep -qw docker; then
+    ok "usuario ya en el grupo docker"
+  else
+    sudo usermod -aG docker "$USER"
+    warn "añadido al grupo docker: cierra sesión y vuelve a entrar para aplicarlo"
+  fi
+}
+
 install_security() {
   security_apt
   security_go
   security_pipx
+  security_docker
   ok "capa de seguridad completada"
 }
 
