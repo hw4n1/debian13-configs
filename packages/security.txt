@@ -1,0 +1,31 @@
+# Escaneo de red
+nmap
+masscan
+# Web
+sqlmap
+nikto
+whatweb
+gobuster
+ffuf
+wfuzz
+# Fuerza bruta / passwords
+hydra
+john
+hashcat
+hashid
+# Análisis / forense
+libimage-exiftool-perl
+binwalk
+foremost
+steghide
+# Reversing
+gdb
+ltrace
+strace
+# Utilidades
+netcat-openbsd
+tcpdump
+bind9-dnsutils
+whois
+jq
+git

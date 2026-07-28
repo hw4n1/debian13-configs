@@ -11,16 +11,21 @@ pkg_installed(){
 }
 
 apt_install(){
-	local faltan=()
+	local faltan=() no_existe=()
 	local p
 	for p in "$@"; do
 		if pkg_installed "$p"; then
 			ok "ya instalado: $p"
-		else
+		elif apt-cache show "$p" >/dev/null 2>&1; then
 			faltan+=("$p")
+		else
+			no_existe+=("$p")
 		fi
 	done
 
+	if [[ ${#no_existe[@]} -gt 0 ]]; then
+    warn "no disponibles en los repos (se omiten): ${no_existe[*]}"
+ 	fi
 
 	if [[ ${#faltan[@]} -eq 0 ]]; then
 		log "nada que instalar, todo presente"
