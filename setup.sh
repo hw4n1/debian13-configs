@@ -10,6 +10,7 @@ source "${SCRIPT_DIR}/modules/desktop.sh"
 
 main() {
 	log "Arrancando setup..."
+	set_timezone
 	enable_repos
 	apt_install curl git
 	install_shell

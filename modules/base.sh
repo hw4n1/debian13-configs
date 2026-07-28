@@ -27,3 +27,14 @@ enable_repos() {
 	sudo apt-get update -qq
 	ok "repos habilitados"
 }
+
+set_timezone() {
+  local tz="America/Bogota"
+  if [[ "$(timedatectl show -p Timezone --value)" == "$tz" ]]; then
+    ok "zona horaria ya es $tz"
+  else
+    sudo timedatectl set-timezone "$tz"
+    ok "zona horaria fijada a $tz"
+  fi
+  sudo timedatectl set-ntp true
+}
