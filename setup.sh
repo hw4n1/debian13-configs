@@ -6,6 +6,8 @@ source "${SCRIPT_DIR}/lib/common.sh"
 source "${SCRIPT_DIR}/modules/base.sh"
 source "${SCRIPT_DIR}/modules/desktop.sh"
 source "${SCRIPT_DIR}/modules/security.sh"
+source "${SCRIPT_DIR}/modules/ai.sh"
+
 
 [[ $EUID -ne 0 ]] || die "No los corras como root"
 
@@ -17,6 +19,7 @@ Módulos:
   --desktop     entorno i3 + dotfiles + fuente + zsh
   --all         todos los módulos
   --security    herramientas de pentest/bug bounty/CTF
+  --ai          claude desktop y claude code
 
 Sin módulos seleccionados, muestra esta ayuda.
 EOF
@@ -27,11 +30,13 @@ main() {
 
   local do_desktop=false
   local do_security=false
+  local do_ai=false
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --desktop) do_desktop=true ;;
       --security) do_security=true ;;
+      --ai) do_ai=true ;;
       --all)     do_desktop=true ;;
       -h|--help) usage; exit 0 ;;
       *) die "opción desconocida: $1 (usa --help)" ;;
@@ -53,6 +58,11 @@ main() {
 
   if $do_security; then
     install_security
+  fi
+
+  if $do_ai; then 
+    install_claude_desktop
+    install_claude_code
   fi
 
   ok "Todo listo."
