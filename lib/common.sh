@@ -58,3 +58,12 @@ link_config(){
 	ok "enlazado: $dest -> $src"
 
 }
+
+apt_install_list()
+{
+	local file="$1"
+	[[ -f "$file" ]] || { warn "lista no encontrada: $file"; return 1; }
+	local pkgs
+	mapfile -t pkgs < <(grep -vE '^\s*(#|$)' "$file")
+  	apt_install "${pkgs[@]}"
+}

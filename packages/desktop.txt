@@ -1,0 +1,21 @@
+# Entorno gráfico base
+xorg
+i3
+kitty
+lightdm
+lightdm-gtk-greeter
+# Ecosistema
+rofi
+polybar
+picom
+dunst
+libnotify-bin
+feh
+unzip
+# Red
+network-manager
+network-manager-gnome
+# Apps y utilidades
+firefox-esr
+autorandr
+arandr

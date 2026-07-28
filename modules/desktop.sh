@@ -3,14 +3,8 @@
 
 install_desktop(){
 	log "instalando entorno grafico i3..."
-	apt_install \
-		xorg i3 kitty \
-		lightdm lightdm-gtk-greeter \
-		rofi polybar picom dunst libnotify-bin feh unzip \
-		network-manager network-manager-gnome \
-		firefox-esr autorandr arandr		
+	apt_install_list "${REPO_DIR}/packages/desktop.txt"
 	ok "escritorio base instalado"
-
 }
 
 link_dotfiles(){
@@ -66,7 +60,6 @@ set_default_shell(){
 
 install_shell(){
 	log "instalando CLI..."
-	apt_install \
-		zsh zsh-autosuggestions zsh-syntax-highlighting
+	apt_install_list "${REPO_DIR}/packages/shell.txt"
 	ok "zsh instalado"
 }
