@@ -7,7 +7,38 @@ security_apt() {
   ok "herramientas apt instaladas"
 }
 
+security_go() {
+  log "instalando herramientas de Go..."
+
+  export GOPATH="${GOPATH:-$HOME/go}"
+  export PATH="$PATH:$GOPATH/bin"
+
+  local -A gotools=(
+    [subfinder]="github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest"
+    [httpx]="github.com/projectdiscovery/httpx/cmd/httpx@latest"
+    [nuclei]="github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest"
+    [naabu]="github.com/projectdiscovery/naabu/v2/cmd/naabu@latest"
+    [dnsx]="github.com/projectdiscovery/dnsx/cmd/dnsx@latest"
+    [katana]="github.com/projectdiscovery/katana/cmd/katana@latest"
+    [gau]="github.com/lc/gau/v2/cmd/gau@latest"
+    [anew]="github.com/tomnomnom/anew@latest"
+  )
+
+  local tool
+  for tool in "${!gotools[@]}"; do
+    if [[ -x "${GOPATH}/bin/${tool}" ]]; then
+      ok "ya instalado: $tool"
+    else
+      log "go install: $tool"
+      go install "${gotools[$tool]}" && ok "instalado: $tool" \
+        || warn "falló: $tool"
+    fi
+  done
+}
+
 install_security() {
   security_apt
+  security_go
   ok "capa de seguridad completada"
 }
+
