@@ -34,3 +34,10 @@ pipx
 #Contenedores
 docker.io
 docker-compose
+# Sesiones y utilidades
+tmux
+rlwrap
+openvpn
+smbclient
+# Reversing / pwn extra
+ltrace

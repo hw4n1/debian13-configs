@@ -22,6 +22,11 @@ security_go() {
     [katana]="github.com/projectdiscovery/katana/cmd/katana@latest"
     [gau]="github.com/lc/gau/v2/cmd/gau@latest"
     [anew]="github.com/tomnomnom/anew@latest"
+    [gf]="github.com/tomnomnom/gf@latest"
+    [dalfox]="github.com/hahwul/dalfox/v2@latest"
+    [waybackurls]="github.com/tomnomnom/waybackurls@latest"
+    [amass]="github.com/owasp-amass/amass/v4/...@master"
+    [gowitness]="github.com/sensepost/gowitness@latest"
   )
 
   local tool
@@ -44,6 +49,8 @@ security_pipx() {
     dirsearch
     wafw00f
     uro
+    enum4linux-ng
+    pwntools
   )
 
   local installed
@@ -76,12 +83,19 @@ security_docker() {
     warn "añadido al grupo docker: cierra sesión y vuelve a entrar para aplicarlo"
   fi
 }
+security_wordlists() {
+  [[ -d /usr/share/seclists ]] && { ok "seclists ya presente"; return 0; }
+  log "clonando SecLists..."
+  sudo git clone --depth 1 https://github.com/danielmiessler/SecLists /usr/share/seclists \
+    && ok "seclists instalado" || warn "falló seclists"
+}
 
 install_security() {
   security_apt
   security_go
   security_pipx
   security_docker
+  security_wordlists
   ok "capa de seguridad completada"
 }
 
