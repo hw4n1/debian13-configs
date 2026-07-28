@@ -36,9 +36,34 @@ security_go() {
   done
 }
 
+security_pipx() {
+  log "instalando herramientas de Python (pipx)..."
+
+  local pytools=(
+    arjun
+    dirsearch
+    wafw00f
+    uro
+  )
+
+  local installed
+  installed="$(pipx list 2>/dev/null)"
+
+  local tool
+  for tool in "${pytools[@]}"; do
+    if grep -qi "package $tool " <<< "$installed"; then
+      ok "ya instalado: $tool"
+    else
+      log "pipx install: $tool"
+      pipx install "$tool" && ok "instalado: $tool" || warn "falló: $tool"
+    fi
+  done
+}
+
 install_security() {
   security_apt
   security_go
+  security_pipx
   ok "capa de seguridad completada"
 }
 
