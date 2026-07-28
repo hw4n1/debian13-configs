@@ -8,18 +8,46 @@ source "${SCRIPT_DIR}/modules/desktop.sh"
 
 [[ $EUID -ne 0 ]] || die "No los corras como root"
 
+usage() {
+  cat <<EOF
+Uso: ${0##*/} [opciones]
+
+Módulos:
+  --desktop     entorno i3 + dotfiles + fuente + zsh
+  --all         todos los módulos
+
+Sin módulos seleccionados, muestra esta ayuda.
+EOF
+}
+
 main() {
-	log "Arrancando setup..."
-	set_timezone
-	enable_repos
-	apt_install curl git
-	install_shell
-	install_desktop
-	install_nerd_font
-	link_dotfiles
-	set_default_shell
-	ok "Todo listo."
+  [[ $# -eq 0 ]] && { usage; exit 0; }
+
+  local do_desktop=false
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --desktop) do_desktop=true ;;
+      --all)     do_desktop=true ;;
+      -h|--help) usage; exit 0 ;;
+      *) die "opción desconocida: $1 (usa --help)" ;;
+    esac
+    shift
+  done
+
+  log "Arrancando setup..."
+  enable_repos
+
+  if $do_desktop; then
+    apt_install curl git
+    install_shell
+    install_desktop
+    install_nerd_font
+    link_dotfiles
+    set_default_shell
+  fi
+
+  ok "Todo listo."
 }
 
 main "$@"
-
