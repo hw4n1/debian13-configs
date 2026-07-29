@@ -51,6 +51,7 @@ security_pipx() {
     uro
     enum4linux-ng
     pwntools
+    git+https://github.com/Pennyw0rth/NetExec
   )
 
   local installed

@@ -32,6 +32,6 @@ alias ll='ls -lah --color=auto'
 alias grep='grep --color=auto'
 alias ..='cd ..'
 alias kali='docker run -it --rm -v "$PWD":/work kalilinux/kali-rolling'
-
+alias clear='printf "\033c"'
 export PATH="$HOME/go/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
