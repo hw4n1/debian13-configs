@@ -1,0 +1,34 @@
+# Herramientas base de packaging
+build-essential
+devscripts
+debhelper
+dh-make
+dpkg-dev
+fakeroot
+quilt
+lintian
+# Construccion en chroot limpio
+sbuild
+schroot
+debootstrap
+# Flujo con git
+git-buildpackage
+# Testing del paquete
+piuparts
+autopkgtest
+# Subida y utilidades
+dput-ng
+apt-file
+# Firma
+gnupg
+rustc
+rustup
+build-essential
+pkg-config
+libclang-dev
+libudev-dev
+libgtk-3-dev
+libdbus-1-dev
+cmake
+libfontconfig-dev
+libxkbcommon-dev

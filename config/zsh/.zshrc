@@ -5,6 +5,9 @@ setopt HIST_IGNORE_DUPS
 setopt SHARE_HISTORY
 setopt INC_APPEND_HISTORY
 
+export DEBFULLNAME="Juan Munoz"
+export DEBEMAIL="me@juanes.sh"
+
 autoload -Uz compinit && compinit
 zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
