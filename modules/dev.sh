@@ -7,6 +7,6 @@ dev_debian_packaging() {
 }
 
 install_dev() {
-  dev_debian_packaging
+  dev_debian_packaging || return 1
   ok "entorno de desarrollo completado"
 }

@@ -1,11 +1,28 @@
 #!/usr/bin/env bash
-killall -q polybar
-while pgrep -u $UID -x polybar >/dev/null; do sleep 0.2; done
+set -uo pipefail
 
-if type xrandr >/dev/null 2>&1; then
-	for m in $(xrandr --query | grep " connected" | cut -d" " -f1); do
-		MONITOR=$m polybar --reload main --config="$HOME/.config/polybar/config.ini" 2>&1 | tee -a /tmp/polybar.log & disown
-	done
+CONFIG="$HOME/.config/polybar/config.ini"
+LOG="${XDG_RUNTIME_DIR:-/tmp}/polybar.log"
+
+killall -q polybar
+while pgrep -u "$UID" -x polybar >/dev/null; do sleep 0.2; done
+
+: > "$LOG"
+
+launch_bar() {
+  MONITOR="$1" polybar --reload main --config="$CONFIG" >>"$LOG" 2>&1 &
+  disown
+}
+
+connected_monitors() {
+  xrandr --query | awk '/ connected/ {print $1}'
+}
+
+if command -v xrandr >/dev/null 2>&1; then
+  while read -r monitor; do
+    launch_bar "$monitor"
+  done < <(connected_monitors)
 else
-	polybar --reload main --config="$HOME/.config/polybar/config.ini" main 2>&1 | tee -a /tmp/polybar.log & disown
+  polybar --reload main --config="$CONFIG" >>"$LOG" 2>&1 &
+  disown
 fi

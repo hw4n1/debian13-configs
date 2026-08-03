@@ -4,6 +4,8 @@ Referencia de herramientas de pentest, bug bounty y CTF, organizada por fase de 
 
 Fuentes: APT (repos Debian), GO (binario via go install), PIPX (Python aislado), SCRIPT (binario o script de GitHub), DOCKER (contenedor).
 
+**APT, GO y PIPX los instala `./setup.sh --security`. SCRIPT y DOCKER son referencia: se instalan a mano cuando hacen falta**, porque no estan empaquetados en Debian 13 o solo interesan puntualmente. Esta pagina es el catalogo completo, no la lista de lo ya instalado; para eso mira `packages/security.txt` y los arrays `GO_TOOLS` y `PIPX_TOOLS` de `modules/security.sh`.
+
 Rutas: binarios Go en `~/go/bin`, pipx en `~/.local/bin`, scripts sueltos en `~/tools`. Todos deben estar en el PATH.
 
 ## Fase 1. Reconocimiento
@@ -55,7 +57,7 @@ gowitness   -> github.com/sensepost/gowitness@latest
 | whatweb | APT | Identifica tecnologias web. `whatweb URL` |
 | wafw00f | PIPX | Detecta WAF y firewalls. `wafw00f URL` |
 | nikto | APT | Escaner web clasico de misconfigs. `nikto -h URL` |
-| wpscan | APT | Auditoria especifica de WordPress. `wpscan --url URL` |
+| wpscan | DOCKER | Auditoria especifica de WordPress. No esta en Debian 13; usar la imagen de Kali. |
 
 ### Enumeracion de servicios (SMB y otros)
 
@@ -119,7 +121,7 @@ qsreplace         -> github.com/tomnomnom/qsreplace@latest
 
 | Tool | Fuente | Que hace |
 |------|--------|----------|
-| rizin | APT | Framework de reversing (fork de radare2). `rizin -A binario` |
+| rizin | DOCKER | Framework de reversing (fork de radare2). No esta en Debian 13; usar la imagen de Kali. |
 | gdb | APT | Debugger (mejora con GEF o pwndbg). `gdb ./binario` |
 | ltrace, strace | APT | Trazado de librerias y syscalls. `strace ./binario` |
 | pwntools | PIPX | Framework Python para explotacion de binarios. `from pwn import *` |

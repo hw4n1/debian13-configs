@@ -1,5 +1,4 @@
 [global]
-	monitor	= 0
 	follow	= mouse
 	width	= 350
 	height	= (0, 120)

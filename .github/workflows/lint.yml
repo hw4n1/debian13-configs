@@ -1,0 +1,44 @@
+name: lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar shellcheck
+        run: sudo apt-get update -qq && sudo apt-get install -y shellcheck
+
+      - name: Sintaxis de bash
+        run: |
+          find . -name '*.sh' -not -path './.git/*' -print0 \
+            | xargs -0 -n1 bash -n
+          bash -n config/autorandr/postswitch
+
+      - name: shellcheck
+        run: |
+          find . -name '*.sh' -not -path './.git/*' -print0 \
+            | xargs -0 shellcheck -x -e SC1091
+          shellcheck -e SC1091 config/autorandr/postswitch
+
+  configs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar validadores
+        run: sudo apt-get update -qq && sudo apt-get install -y i3-wm
+
+      - name: Validar config de i3
+        run: i3 -C -c config/i3/config
+
+      - name: Comprobar que los paquetes existen en Debian
+        run: |
+          sed -e 's/#.*//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' packages/*.txt \
+            | grep -v '^$' | sort -u > /tmp/pkgs.txt
+          test -s /tmp/pkgs.txt

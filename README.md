@@ -33,9 +33,9 @@ i3 con configuracion coherente en tema Catppuccin Mocha.
 
 Set curado, instalado desde cuatro fuentes segun lo optimo para cada herramienta:
 
-* apt: nmap, masscan, sqlmap, nikto, gobuster, ffuf, wfuzz, hydra, john, hashcat, binwalk, steghide, rizin, smbclient, tmux, openvpn.
-* Go (ProjectDiscovery y afines): subfinder, httpx, nuclei, naabu, dnsx, katana, gau, dalfox, amass, gowitness, gf.
-* pipx: arjun, dirsearch, wafw00f, uro, pwntools.
+* apt: nmap, masscan, sqlmap, nikto, whatweb, gobuster, ffuf, wfuzz, hydra, john, hashcat, binwalk, steghide, foremost, gdb, checksec, socat, proxychains4, smbclient, tmux, openvpn.
+* Go (ProjectDiscovery y afines): subfinder, httpx, nuclei, naabu, dnsx, katana, gau, waybackurls, anew, gf, qsreplace, assetfinder, dalfox, amass, gowitness, interactsh-client, greenclip.
+* pipx: arjun, dirsearch, wafw00f, uro, enum4linux-ng, pwntools, NetExec.
 * Docker: motor mas Kali desechable para el arsenal pesado bajo demanda.
 
 Ver `docs/arsenal.md` para el listado completo por fase y `docs/cheatsheet.md` para comandos de uso.
@@ -49,12 +49,19 @@ cd ~/setup
 ./setup.sh --help          # opciones
 ./setup.sh --desktop       # solo el entorno i3
 ./setup.sh --security      # solo herramientas de seguridad
+./setup.sh --dev           # packaging Debian y toolchains
+./setup.sh --ai            # Claude Desktop y Claude Code
+./setup.sh --hardware      # asusctl (portatiles ASUS ROG)
 ./setup.sh --all           # todo
 ```
 
 No ejecutar como root. El script pide `sudo` solo cuando lo necesita (apt, servicios). Los dotfiles y binarios de usuario se mantienen bajo el usuario normal.
 
+Un paso que falla se reporta y se omite; al terminar, el script lista los pasos omitidos y sale con codigo 1 si hubo alguno.
+
 Tras `--desktop`, cerrar sesion y volver a entrar para aplicar zsh como shell por defecto y el grupo `docker`, y seleccionar la sesion i3 en el login.
+
+La identidad de packaging (`DEBFULLNAME`, `DEBEMAIL`) no esta versionada: copia `config/zsh/zshrc.local.example` a `~/.zshrc.local` y ponla ahi.
 
 ## Estructura
 
@@ -64,14 +71,19 @@ Tras `--desktop`, cerrar sesion y volver a entrar para aplicar zsh como shell po
 |-- lib/
 |   `-- common.sh         # helpers reusables (apt_install, link_config)
 |-- modules/
-|   |-- base.sh           # preparacion del sistema (repos)
+|   |-- base.sh           # preparacion del sistema (repos, zona horaria)
 |   |-- desktop.sh        # entorno i3, dotfiles, fuente, zsh
-|   `-- security.sh       # herramientas de pentest
+|   |-- security.sh       # herramientas de pentest
+|   |-- dev.sh            # packaging Debian y toolchains
+|   |-- ai.sh             # Claude Desktop y Claude Code
+|   `-- hardware.sh       # asusctl (ASUS ROG)
 |-- packages/
+|   |-- shell.txt         # zsh y plugins
 |   |-- desktop.txt       # paquetes del escritorio
-|   `-- security.txt      # paquetes de seguridad
+|   |-- security.txt      # paquetes de seguridad
+|   `-- dev.txt           # paquetes de desarrollo
 |-- config/               # dotfiles reales (enlazados por symlink)
-|   `-- i3/ polybar/ picom/ kitty/ rofi/ dunst/ zsh/
+|   `-- i3/ polybar/ picom/ kitty/ rofi/ dunst/ zsh/ autorandr/ wallpapers/
 `-- docs/                 # arsenal.md, cheatsheet.md
 ```
 
@@ -86,10 +98,9 @@ Separacion de responsabilidades: `lib/` reusable, `modules/` logica por area, `p
 
 ## En progreso
 
-Modulo de desarrollo (`--dev`) con toolchains para contribuir a proyectos upstream:
+El modulo `--dev` ya cubre el packaging de Debian (devscripts, sbuild, lintian, git-buildpackage) y la toolchain de Rust via rustup. Falta anadir:
 
 * The Tor Project: C tor (autotools) y Arti (Rust).
-* Debian: packaging (devscripts, sbuild, lintian, git-buildpackage).
 * Linux kernel: build y `b4` para el flujo de parches por email.
 
 ## Roadmap
@@ -97,15 +108,20 @@ Modulo de desarrollo (`--dev`) con toolchains para contribuir a proyectos upstre
 * [x] Escritorio i3 completo (Catppuccin)
 * [x] Refactor modular (lib, modules, packages)
 * [x] Capa de seguridad (apt, Go, pipx, Docker)
-* [ ] Modulo de desarrollo (`--dev`)
+* [x] Modulo de desarrollo (`--dev`)
+* [x] Modulos `--ai` y `--hardware`
 * [ ] Funcion para binarios de GitHub (linpeas, chisel, Burp)
 * [ ] Perfiles de autorandr versionados
 
 ## Notas
 
 * Probado en Debian 13 (Trixie). Otras versiones pueden requerir ajustes en nombres de paquetes.
-* Algunas herramientas no estan en repos Debian y se instalan por otras vias (SecLists por git clone, enum4linux-ng desde GitHub).
+* Algunas herramientas no estan en repos Debian y se instalan por otras vias (SecLists por git clone, enum4linux-ng y NetExec por pipx desde GitHub, greenclip por `go install`).
+* `rizin` y `wpscan` no estan en Debian 13; usar la imagen de Kali para esos casos.
 * La imagen de Kali (Docker) se descarga bajo demanda la primera vez que se usa, no durante la instalacion.
+* El teclado se fija a `latam` en el arranque de i3; cambialo en `config/i3/config` si usas otra distribucion de teclas.
+* `--security` anade tu usuario al grupo `docker`, lo que equivale a acceso root en la maquina.
+* `--ai` y `--hardware` instalan via `curl | sh` desde claude.ai y sh.rustup.rs.
 
 ## Licencia
 

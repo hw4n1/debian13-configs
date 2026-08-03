@@ -12,9 +12,24 @@ dunst
 libnotify-bin
 feh
 unzip
+# Bloqueo de pantalla y autostart
+i3lock
+xss-lock
+dex
+# Audio
+pipewire-audio
+pipewire-pulse
+wireplumber
+pulseaudio-utils
 # Red
 network-manager
 network-manager-gnome
+# Iconos y utilidades de escritorio
+papirus-icon-theme
+brightnessctl
+maim
+xclip
+xdotool
 # Apps y utilidades
 firefox-esr
 autorandr

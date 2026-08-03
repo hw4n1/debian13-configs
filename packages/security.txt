@@ -22,16 +22,20 @@ steghide
 gdb
 ltrace
 strace
+checksec
 # Utilidades
 netcat-openbsd
+socat
+proxychains4
 tcpdump
 bind9-dnsutils
+snmp
 whois
 jq
 git
 golang-go
 pipx
-#Contenedores
+# Contenedores
 docker.io
 docker-compose
 # Sesiones y utilidades
@@ -39,5 +43,3 @@ tmux
 rlwrap
 openvpn
 smbclient
-# Reversing / pwn extra
-ltrace

@@ -10,8 +10,9 @@ source "${SCRIPT_DIR}/modules/ai.sh"
 source "${SCRIPT_DIR}/modules/dev.sh"
 source "${SCRIPT_DIR}/modules/hardware.sh"
 
+[[ $EUID -ne 0 ]] || die "No lo corras como root"
 
-[[ $EUID -ne 0 ]] || die "No los corras como root"
+PASOS_OMITIDOS=()
 
 usage() {
   cat <<EOF
@@ -19,14 +20,36 @@ Uso: ${0##*/} [opciones]
 
 Módulos:
   --desktop     entorno i3 + dotfiles + fuente + zsh
-  --all         todos los módulos
   --security    herramientas de pentest/bug bounty/CTF
-  --dev         herramienta de desarollo
-  --ai          claude desktop y claude code
-  --hardware    herramienta especificas de hardware
+  --dev         herramientas de desarrollo y packaging Debian
+  --ai          Claude Desktop y Claude Code
+  --hardware    herramientas específicas de hardware (asusctl)
+  --all         todos los módulos
 
 Sin módulos seleccionados, muestra esta ayuda.
 EOF
+}
+
+run_step() {
+  local descripcion="$1"; shift
+
+  if "$@"; then
+    return 0
+  fi
+
+  warn "paso omitido por error: ${descripcion}"
+  PASOS_OMITIDOS+=("$descripcion")
+}
+
+report_skipped_steps() {
+  [[ ${#PASOS_OMITIDOS[@]} -eq 0 ]] && { ok "Todo listo."; return 0; }
+
+  warn "terminado con ${#PASOS_OMITIDOS[@]} paso(s) omitido(s):"
+  local paso
+  for paso in "${PASOS_OMITIDOS[@]}"; do
+    warn "  - $paso"
+  done
+  return 1
 }
 
 main() {
@@ -40,50 +63,51 @@ main() {
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --desktop) do_desktop=true ;;
+      --desktop)  do_desktop=true ;;
       --security) do_security=true ;;
-      --ai) do_ai=true ;;
-      --dev) do_dev=true ;;
+      --ai)       do_ai=true ;;
+      --dev)      do_dev=true ;;
       --hardware) do_hardware=true ;;
-      --all)      do_desktop=true; do_security=true; do_dev=true; do_ai=true ;;
-      -h|--help) usage; exit 0 ;;
+      --all)      do_desktop=true; do_security=true; do_dev=true
+                  do_ai=true; do_hardware=true ;;
+      -h|--help)  usage; exit 0 ;;
       *) die "opción desconocida: $1 (usa --help)" ;;
     esac
     shift
   done
 
   log "Arrancando setup..."
-  enable_repos
+
+  run_step "paquetes base"        apt_install curl git ca-certificates unzip
+  run_step "repos contrib/non-free" enable_repos
+  run_step "zona horaria"         set_timezone
 
   if $do_hardware; then
-    install_hardware
+    run_step "hardware (asusctl)" install_hardware
   fi
 
   if $do_desktop; then
-    apt_install curl git
-    install_shell
-    install_desktop
-    install_nerd_font
-    link_dotfiles
-    set_default_shell
+    run_step "shell (zsh)"     install_shell
+    run_step "escritorio i3"   install_desktop
+    run_step "Nerd Font"       install_nerd_font
+    run_step "dotfiles"        link_dotfiles
+    run_step "zsh por defecto" set_default_shell
   fi
 
   if $do_security; then
-    install_security
+    run_step "capa de seguridad" install_security
   fi
 
-  if $do_ai; then 
-    install_claude_desktop
-    install_claude_code
+  if $do_ai; then
+    run_step "Claude Desktop" install_claude_desktop
+    run_step "Claude Code"    install_claude_code
   fi
 
   if $do_dev; then
-    log "instalando dev packages..."
-    dev_debian_packaging
-    install_desktop
+    run_step "entorno de desarrollo" install_dev
   fi
 
-  ok "Todo listo."
+  report_skipped_steps
 }
 
 main "$@"

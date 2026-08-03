@@ -1,0 +1,2 @@
+export DEBFULLNAME="Nombre Apellido"
+export DEBEMAIL="tu@correo.tld"

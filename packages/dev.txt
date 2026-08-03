@@ -21,9 +21,9 @@ dput-ng
 apt-file
 # Firma
 gnupg
-rustc
+# Toolchain Rust (rustup entra en conflicto con rustc/cargo de Debian)
 rustup
-build-essential
+# Dependencias de compilacion nativas
 pkg-config
 libclang-dev
 libudev-dev
