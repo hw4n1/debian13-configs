@@ -104,7 +104,10 @@ main() {
   fi
 
   if $do_dev; then
-    run_step "entorno de desarrollo" install_dev
+    run_step "kit de packaging"        dev_debian_packaging
+    run_step "deb-src"                 dev_enable_deb_src
+    run_step "dotfiles de packaging"   dev_link_dotfiles
+    run_step "chroot sbuild (unshare)" dev_sbuild_chroot
   fi
 
   report_skipped_steps
