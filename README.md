@@ -40,6 +40,18 @@ Set curado, instalado desde cuatro fuentes segun lo optimo para cada herramienta
 
 Ver `docs/arsenal.md` para el listado completo por fase y `docs/cheatsheet.md` para comandos de uso.
 
+## Desarrollo y packaging Debian
+
+El modulo `--dev` deja la maquina lista para arreglar bugs en paquetes del archivo:
+
+* Kit de packaging: devscripts, debhelper, dh-make, quilt, lintian, licensecheck, sbuild, git-buildpackage, pristine-tar, dgit, patchutils, wdiff, piuparts, autopkgtest, dput-ng, reportbug, how-can-i-help.
+* `deb-src` habilitado en las fuentes deb822 de trixie, sin el cual `apt source` no funciona.
+* Dotfiles de packaging por symlink: `~/.sbuildrc`, `~/.quiltrc-dpkg` y `~/.devscripts`.
+* Chroot de sbuild de unstable, creado con `mmdebstrap` sobre el backend unshare.
+* Toolchain de Rust via rustup, mas las dependencias nativas de compilacion habituales.
+
+Ver `docs/packaging.md` para el flujo completo por fases: elegir el bug, obtener el fuente, reproducir, parchear, validar y enviar.
+
 ## Uso
 
 ```bash
@@ -49,7 +61,7 @@ cd ~/setup
 ./setup.sh --help          # opciones
 ./setup.sh --desktop       # solo el entorno i3
 ./setup.sh --security      # solo herramientas de seguridad
-./setup.sh --dev           # packaging Debian y toolchains
+./setup.sh --dev           # packaging Debian, chroot sbuild y toolchains
 ./setup.sh --ai            # Claude Desktop y Claude Code
 ./setup.sh --hardware      # asusctl (portatiles ASUS ROG)
 ./setup.sh --all           # todo
@@ -74,7 +86,7 @@ La identidad de packaging (`DEBFULLNAME`, `DEBEMAIL`) no esta versionada: copia 
 |   |-- base.sh           # preparacion del sistema (repos, zona horaria)
 |   |-- desktop.sh        # entorno i3, dotfiles, fuente, zsh
 |   |-- security.sh       # herramientas de pentest
-|   |-- dev.sh            # packaging Debian y toolchains
+|   |-- dev.sh            # packaging Debian, chroot sbuild y toolchains
 |   |-- ai.sh             # Claude Desktop y Claude Code
 |   `-- hardware.sh       # asusctl (ASUS ROG)
 |-- packages/
@@ -83,8 +95,9 @@ La identidad de packaging (`DEBFULLNAME`, `DEBEMAIL`) no esta versionada: copia 
 |   |-- security.txt      # paquetes de seguridad
 |   `-- dev.txt           # paquetes de desarrollo
 |-- config/               # dotfiles reales (enlazados por symlink)
+|   |-- devscripts/       # sbuildrc, quiltrc-dpkg, devscripts (packaging)
 |   `-- i3/ polybar/ picom/ kitty/ rofi/ dunst/ zsh/ autorandr/ wallpapers/
-`-- docs/                 # arsenal.md, cheatsheet.md
+`-- docs/                 # arsenal.md, cheatsheet.md, packaging.md
 ```
 
 Separacion de responsabilidades: `lib/` reusable, `modules/` logica por area, `packages/` datos, `config/` contenido, y `setup.sh` decide que corre.
@@ -98,7 +111,7 @@ Separacion de responsabilidades: `lib/` reusable, `modules/` logica por area, `p
 
 ## En progreso
 
-El modulo `--dev` ya cubre el packaging de Debian (devscripts, sbuild, lintian, git-buildpackage) y la toolchain de Rust via rustup. Falta anadir:
+El modulo `--dev` ya cubre el flujo de packaging de Debian y la toolchain de Rust via rustup. Falta anadir:
 
 * The Tor Project: C tor (autotools) y Arti (Rust).
 * Linux kernel: build y `b4` para el flujo de parches por email.
@@ -122,6 +135,8 @@ El modulo `--dev` ya cubre el packaging de Debian (devscripts, sbuild, lintian, 
 * El teclado se fija a `latam` en el arranque de i3; cambialo en `config/i3/config` si usas otra distribucion de teclas.
 * `--security` anade tu usuario al grupo `docker`, lo que equivale a acceso root en la maquina.
 * `--ai` y `--hardware` instalan via `curl | sh` desde claude.ai y sh.rustup.rs.
+* `--dev` usa el backend `unshare` de sbuild (construccion sin root, sin schroot que configurar). Va explicito en `~/.sbuildrc` porque en trixie el default sigue siendo schroot.
+* `--dev` crea el chroot de unstable en `~/.cache/sbuild` la primera vez; son unos minutos de descarga. Si ya existe el tarball, el paso no hace nada.
 
 ## Licencia
 
