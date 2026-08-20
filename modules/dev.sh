@@ -141,9 +141,14 @@ sbuild_tarball() {
   printf '%s/%s-%s.tar.zst' "$SBUILD_CACHE" "$SBUILD_SUITE" "$(dpkg --print-architecture)"
 }
 
+sbuild_tarball_en_construccion() {
+  printf '%s/%s-%s.nuevo.tar.zst' "$SBUILD_CACHE" "$SBUILD_SUITE" "$(dpkg --print-architecture)"
+}
+
 crear_chroot_sbuild() {
-  local modo="$1" tarball
+  local modo="$1" tarball temporal
   tarball="$(sbuild_tarball)"
+  temporal="$(sbuild_tarball_en_construccion)"
 
   if [[ "$modo" == conservar_existente && -f "$tarball" ]]; then
     ok "chroot de sbuild ya existe: $tarball"
@@ -151,16 +156,17 @@ crear_chroot_sbuild() {
   fi
 
   mkdir -p "$SBUILD_CACHE" "$CCACHE_DIR_SBUILD"
+  rm -rf "$temporal"
 
   log "creando chroot ${SBUILD_SUITE}/$(dpkg --print-architecture) (tarda unos minutos)..."
   if ! mmdebstrap --variant=buildd --include=ccache,eatmydata \
-       "$SBUILD_SUITE" "${tarball}.nuevo" "$SBUILD_MIRROR"; then
-    rm -f "${tarball}.nuevo"
-    warn "mmdebstrap falló; el chroot no se tocó"
+       "$SBUILD_SUITE" "$temporal" "$SBUILD_MIRROR"; then
+    rm -rf "$temporal"
+    warn "mmdebstrap falló; el chroot anterior no se tocó"
     return 1
   fi
 
-  mv "${tarball}.nuevo" "$tarball"
+  mv "$temporal" "$tarball"
   ok "chroot listo: $tarball"
 }
 
