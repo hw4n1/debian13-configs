@@ -47,7 +47,13 @@ filtrar_por_scope() {
   ' "$1" -
 }
 
-contar() { [[ -s "$1" ]] && wc -l <"$1" || printf '0'; }
+contar() {
+  if [[ -s "$1" ]]; then
+    wc -l <"$1"
+  else
+    printf '0'
+  fi
+}
 
 cmd_new() {
   local objetivo="${1:-}"

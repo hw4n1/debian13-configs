@@ -11,9 +11,13 @@ APT_SOURCES_DEB822="/etc/apt/sources.list.d/debian.sources"
 APT_SOURCES_LEGACY="/etc/apt/sources.list"
 
 apt_sources_file() {
-  [[ -f "$APT_SOURCES_DEB822" ]] && { printf '%s' "$APT_SOURCES_DEB822"; return 0; }
-  [[ -s "$APT_SOURCES_LEGACY" ]] && { printf '%s' "$APT_SOURCES_LEGACY"; return 0; }
-  return 1
+  if [[ -f "$APT_SOURCES_DEB822" ]]; then
+    printf '%s' "$APT_SOURCES_DEB822"
+  elif [[ -s "$APT_SOURCES_LEGACY" ]]; then
+    printf '%s' "$APT_SOURCES_LEGACY"
+  else
+    return 1
+  fi
 }
 
 apt_sources_is_deb822() {
@@ -41,6 +45,8 @@ edit_apt_sources() {
   sudo apt-get update -qq
   ok "$descripcion habilitado"
 }
+
+ruta_corta() { sed "s|^${HOME}|~|" <<<"$1"; }
 
 pkg_installed() {
   dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"

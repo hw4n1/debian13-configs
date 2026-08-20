@@ -45,11 +45,11 @@ check_symlink() {
   origen="$(readlink -f "${REPO_DIR}/config/${origen_relativo}" 2>/dev/null)"
 
   if already_linked_to "$enlace" "$origen"; then
-    check_ok "enlazado: ${enlace/#$HOME/\~}"
+    check_ok "enlazado: $(ruta_corta "$enlace")"
   elif [[ -e "$enlace" ]]; then
-    check_fail "${enlace/#$HOME/\~} existe pero no apunta al repo"
+    check_fail "$(ruta_corta "$enlace") existe pero no apunta al repo"
   else
-    check_fail "${enlace/#$HOME/\~} no existe"
+    check_fail "$(ruta_corta "$enlace") no existe"
   fi
 }
 
@@ -113,7 +113,7 @@ doctor_packaging() {
   elif ! grep -q '^export DEBEMAIL=' "$ZSHRC_LOCAL"; then
     check_fail "$ZSHRC_LOCAL no define DEBEMAIL"
   else
-    check_ok "identidad de packaging definida en ${ZSHRC_LOCAL/#$HOME/\~}"
+    check_ok "identidad de packaging definida en $(ruta_corta "$ZSHRC_LOCAL")"
   fi
 
   if [[ -n "$(gpg_uid_primaria)" ]]; then
@@ -123,7 +123,7 @@ doctor_packaging() {
   fi
 
   if [[ -f "$GITCONFIG_LOCAL" ]] && grep -q 'email' "$GITCONFIG_LOCAL"; then
-    check_ok "identidad de git en ${GITCONFIG_LOCAL/#$HOME/\~}"
+    check_ok "identidad de git en $(ruta_corta "$GITCONFIG_LOCAL")"
   else
     check_fail "$GITCONFIG_LOCAL no define la identidad de git"
   fi
@@ -135,7 +135,7 @@ doctor_packaging() {
   fi
 
   if [[ -d "$CCACHE_DIR_SBUILD" ]]; then
-    check_ok "ccache de sbuild en ${CCACHE_DIR_SBUILD/#$HOME/\~}"
+    check_ok "ccache de sbuild en $(ruta_corta "$CCACHE_DIR_SBUILD")"
   else
     check_fail "falta $CCACHE_DIR_SBUILD: sbuild abortará al montar el bind de ccache"
   fi

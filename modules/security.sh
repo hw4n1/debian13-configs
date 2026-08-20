@@ -161,7 +161,9 @@ gf_patterns_presentes() {
 
 copiar_patrones_gf() {
   local modo="$1" temporal repo opcion_copia="-n"
-  [[ "$modo" == sobrescribir ]] && opcion_copia="-f"
+  if [[ "$modo" == sobrescribir ]]; then
+    opcion_copia="-f"
+  fi
 
   temporal="$(mktemp -d)"
   mkdir -p "$GF_PATTERNS_DIR"

@@ -32,7 +32,7 @@ correo_de_uid() { sed -nE 's/.*<([^>]+)>.*/\1/p' <<<"$1"; }
 
 dev_identidad_git() {
   if [[ -f "$GITCONFIG_LOCAL" ]]; then
-    ok "identidad de git ya definida en ${GITCONFIG_LOCAL/#$HOME/\~}"
+    ok "identidad de git ya definida en $(ruta_corta "$GITCONFIG_LOCAL")"
     return 0
   fi
 
@@ -55,7 +55,9 @@ dev_identidad_git() {
     printf '[user]\n'
     printf '\tname = %s\n' "$nombre"
     printf '\temail = %s\n' "$correo"
-    [[ -n "$huella" ]] && printf '\tsigningkey = %s\n' "$huella"
+    if [[ -n "$huella" ]]; then
+      printf '\tsigningkey = %s\n' "$huella"
+    fi
 
     while read -r directorio; do
       [[ -n "$directorio" ]] || continue
