@@ -37,4 +37,7 @@ alias clear='printf "\033c"'
 
 export PATH="$HOME/go/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
+export EDITOR="${EDITOR:-nano}"
+export VISUAL="$EDITOR"
+
 [[ -r ~/.zshrc.local ]] && source ~/.zshrc.local

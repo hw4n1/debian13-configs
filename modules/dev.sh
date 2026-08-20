@@ -11,6 +11,44 @@ DEV_DOTFILES=(
   "devscripts/devscripts|.devscripts"
 )
 
+ZSHRC_LOCAL="${HOME}/.zshrc.local"
+
+gpg_uid_primaria() {
+  gpg --list-secret-keys --with-colons 2>/dev/null \
+    | awk -F: '$1 == "uid" { print $10; exit }'
+}
+
+nombre_de_uid() { sed -E 's/ *[(<].*//' <<<"$1"; }
+correo_de_uid() { sed -nE 's/.*<([^>]+)>.*/\1/p' <<<"$1"; }
+
+dev_identidad_packaging() {
+  if [[ -f "$ZSHRC_LOCAL" ]] && grep -q '^export DEBEMAIL=' "$ZSHRC_LOCAL"; then
+    ok "identidad de packaging ya definida en $ZSHRC_LOCAL"
+    return 0
+  fi
+
+  local uid nombre correo
+  uid="$(gpg_uid_primaria)"
+  nombre="$(nombre_de_uid "$uid")"
+  correo="$(correo_de_uid "$uid")"
+
+  [[ -n "$nombre" ]] || nombre="$(git config --get user.name || true)"
+  [[ -n "$correo" ]] || correo="$(git config --get user.email || true)"
+
+  if [[ -z "$nombre" || -z "$correo" ]]; then
+    warn "sin clave GPG ni git config; copia config/zsh/zshrc.local.example a $ZSHRC_LOCAL y rellénala"
+    return 1
+  fi
+
+  log "escribiendo identidad de packaging en $ZSHRC_LOCAL"
+  {
+    printf 'export DEBFULLNAME="%s"\n' "$nombre"
+    printf 'export DEBEMAIL="%s"\n' "$correo"
+  } >>"$ZSHRC_LOCAL"
+
+  ok "identidad de packaging: $nombre <$correo>"
+}
+
 dev_debian_packaging() {
   log "instalando kit de packaging de Debian..."
   apt_install_list "${REPO_DIR}/packages/dev.txt"
