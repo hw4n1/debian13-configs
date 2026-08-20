@@ -9,6 +9,7 @@ source "${SCRIPT_DIR}/modules/security.sh"
 source "${SCRIPT_DIR}/modules/ai.sh"
 source "${SCRIPT_DIR}/modules/dev.sh"
 source "${SCRIPT_DIR}/modules/hardware.sh"
+source "${SCRIPT_DIR}/modules/doctor.sh"
 
 [[ $EUID -ne 0 ]] || die "No lo corras como root"
 
@@ -25,6 +26,9 @@ Módulos:
   --ai          Claude Desktop y Claude Code
   --hardware    herramientas específicas de hardware (asusctl)
   --all         todos los módulos
+
+Diagnóstico:
+  --doctor      revisa el estado de la máquina sin modificar nada
 
 Sin módulos seleccionados, muestra esta ayuda.
 EOF
@@ -63,6 +67,7 @@ main() {
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
+      --doctor)   run_doctor; exit $? ;;
       --desktop)  do_desktop=true ;;
       --security) do_security=true ;;
       --ai)       do_ai=true ;;

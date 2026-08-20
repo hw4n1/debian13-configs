@@ -41,6 +41,25 @@ GF_PATTERNS_REPOS=(
   "https://github.com/1ndianl33t/Gf-Patterns"
 )
 
+NUCLEI_TEMPLATES_CONFIG="${HOME}/.config/nuclei/.templates-config.json"
+SUBFINDER_PROVIDER_CONFIG="${HOME}/.config/subfinder/provider-config.yaml"
+
+nuclei_templates_dir() {
+  local ruta=""
+
+  [[ -f "$NUCLEI_TEMPLATES_CONFIG" ]] \
+    && ruta="$(sed -nE 's/.*"nuclei-templates-directory":"([^"]+)".*/\1/p' "$NUCLEI_TEMPLATES_CONFIG")"
+
+  printf '%s' "${ruta:-${HOME}/nuclei-templates}"
+}
+
+subfinder_claves_configuradas() {
+  [[ -f "$SUBFINDER_PROVIDER_CONFIG" ]] || { printf '0'; return 0; }
+
+  grep -cvE '^[[:space:]]*(#|$)|:[[:space:]]*\[\][[:space:]]*$' \
+    "$SUBFINDER_PROVIDER_CONFIG" || true
+}
+
 security_apt() {
   log "instalando herramientas de seguridad (apt)..."
   apt_install_list "${REPO_DIR}/packages/security.txt"
