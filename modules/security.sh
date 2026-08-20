@@ -17,7 +17,12 @@ declare -A GO_TOOLS=(
   [amass]="github.com/owasp-amass/amass/v4/...@master"
   [gowitness]="github.com/sensepost/gowitness@latest"
   [interactsh-client]="github.com/projectdiscovery/interactsh/cmd/interactsh-client@latest"
+  [notify]="github.com/projectdiscovery/notify/cmd/notify@latest"
   [greenclip]="github.com/erebe/greenclip@latest"
+)
+
+SECURITY_DOTFILES=(
+  "bin/bb|.local/bin/bb"
 )
 
 declare -A PIPX_TOOLS=(
@@ -217,16 +222,31 @@ security_rockyou() {
   ok "rockyou.txt disponible en $rockyou"
 }
 
+security_link_dotfiles() {
+  log "enlazando herramientas propias..."
+
+  local fallidos=0 entrada origen destino
+  for entrada in "${SECURITY_DOTFILES[@]}"; do
+    origen="${entrada%%|*}"
+    destino="${entrada##*|}"
+    link_config "$origen" "$HOME/$destino" || fallidos=$((fallidos + 1))
+  done
+
+  [[ $fallidos -eq 0 ]] || return 1
+  ok "herramientas propias enlazadas"
+}
+
 install_security() {
   local fallidos=0
 
-  security_apt         || fallidos=$((fallidos + 1))
-  security_go          || fallidos=$((fallidos + 1))
-  security_pipx        || fallidos=$((fallidos + 1))
-  security_docker      || fallidos=$((fallidos + 1))
-  security_wordlists   || fallidos=$((fallidos + 1))
-  security_rockyou     || fallidos=$((fallidos + 1))
-  security_gf_patterns || fallidos=$((fallidos + 1))
+  security_apt           || fallidos=$((fallidos + 1))
+  security_link_dotfiles || fallidos=$((fallidos + 1))
+  security_go            || fallidos=$((fallidos + 1))
+  security_pipx          || fallidos=$((fallidos + 1))
+  security_docker        || fallidos=$((fallidos + 1))
+  security_wordlists     || fallidos=$((fallidos + 1))
+  security_rockyou       || fallidos=$((fallidos + 1))
+  security_gf_patterns   || fallidos=$((fallidos + 1))
 
   if [[ $fallidos -gt 0 ]]; then
     warn "capa de seguridad completada con $fallidos bloque(s) omitido(s)"

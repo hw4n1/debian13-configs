@@ -218,6 +218,8 @@ doctor_seguridad() {
     check_warn "subfinder sin API keys: el recon pierde la mayor parte de la cobertura"
   fi
 
+  check_comando bb "./setup.sh --security"
+
   if id -nG "$USER" | grep -qw docker; then
     check_ok "usuario en el grupo docker"
   else

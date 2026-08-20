@@ -19,12 +19,19 @@ jobs:
           find . -name '*.sh' -not -path './.git/*' -print0 \
             | xargs -0 -n1 bash -n
           bash -n config/autorandr/postswitch
+          bash -n config/bin/bb
 
       - name: shellcheck
         run: |
           find . -name '*.sh' -not -path './.git/*' -print0 \
             | xargs -0 shellcheck -x -e SC1091
           shellcheck -e SC1091 config/autorandr/postswitch
+          shellcheck config/bin/bb
+
+      - name: Los scripts ejecutables tienen el bit de ejecucion
+        run: |
+          test -x setup.sh
+          test -x config/bin/bb
 
   configs:
     runs-on: ubuntu-latest
