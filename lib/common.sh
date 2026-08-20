@@ -46,7 +46,15 @@ edit_apt_sources() {
   ok "$descripcion habilitado"
 }
 
-ruta_corta() { sed "s|^${HOME}|~|" <<<"$1"; }
+ruta_corta() {
+  local ruta="$1"
+
+  if [[ "$ruta" == "$HOME"/* ]]; then
+    printf '~%s' "${ruta#"$HOME"}"
+  else
+    printf '%s' "$ruta"
+  fi
+}
 
 pkg_installed() {
   dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"

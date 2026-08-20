@@ -90,7 +90,11 @@ instalar_go_tools() {
     fi
 
     log "go install: $nombre"
-    go install "${GO_TOOLS[$nombre]}" && ok "instalado: $nombre" || warn "falló: $nombre"
+    if go install "${GO_TOOLS[$nombre]}"; then
+      ok "instalado: $nombre"
+    else
+      warn "falló: $nombre"
+    fi
   done
 }
 
@@ -118,7 +122,11 @@ security_pipx() {
       ok "ya instalado: $nombre"
     else
       log "pipx install: $nombre"
-      pipx install "${PIPX_TOOLS[$nombre]}" && ok "instalado: $nombre" || warn "falló: $nombre"
+      if pipx install "${PIPX_TOOLS[$nombre]}"; then
+        ok "instalado: $nombre"
+      else
+        warn "falló: $nombre"
+      fi
     fi
   done
 }
