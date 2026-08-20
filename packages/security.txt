@@ -18,6 +18,7 @@ libimage-exiftool-perl
 binwalk
 foremost
 steghide
+stegseek
 # Reversing
 gdb
 ltrace

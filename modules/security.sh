@@ -27,10 +27,19 @@ declare -A PIPX_TOOLS=(
   [uro]="uro"
   [enum4linux-ng]="enum4linux-ng"
   [pwntools]="pwntools"
+  [impacket]="impacket"
   [netexec]="git+https://github.com/Pennyw0rth/NetExec"
 )
 
 SECLISTS_DIR="/usr/share/seclists"
+WORDLISTS_DIR="/usr/share/wordlists"
+ROCKYOU_TAR="${SECLISTS_DIR}/Passwords/Leaked-Databases/rockyou.txt.tar.gz"
+
+GF_PATTERNS_DIR="${HOME}/.gf"
+GF_PATTERNS_REPOS=(
+  "https://github.com/tomnomnom/gf"
+  "https://github.com/1ndianl33t/Gf-Patterns"
+)
 
 security_apt() {
   log "instalando herramientas de seguridad (apt)..."
@@ -115,14 +124,78 @@ security_wordlists() {
   fi
 }
 
+gf_patterns_presentes() {
+  compgen -G "${GF_PATTERNS_DIR}/*.json" >/dev/null 2>&1
+}
+
+security_gf_patterns() {
+  if ! command -v gf >/dev/null 2>&1; then
+    warn "gf no está instalado; omito sus patrones"
+    return 1
+  fi
+
+  if gf_patterns_presentes; then
+    ok "patrones de gf ya presentes"
+    return 0
+  fi
+
+  log "instalando patrones de gf..."
+
+  local temporal repo
+  temporal="$(mktemp -d)"
+  mkdir -p "$GF_PATTERNS_DIR"
+
+  for repo in "${GF_PATTERNS_REPOS[@]}"; do
+    git clone --depth 1 --quiet "$repo" "${temporal}/$(basename "$repo")" \
+      || warn "falló el clonado de $repo"
+  done
+
+  find "$temporal" -name '*.json' -exec cp -n {} "$GF_PATTERNS_DIR/" \;
+  rm -rf "$temporal"
+
+  if ! gf_patterns_presentes; then
+    warn "no se copió ningún patrón de gf"
+    return 1
+  fi
+
+  ok "patrones de gf instalados: $(find "$GF_PATTERNS_DIR" -name '*.json' | wc -l)"
+}
+
+security_rockyou() {
+  local rockyou="${WORDLISTS_DIR}/rockyou.txt"
+
+  if [[ -s "$rockyou" ]]; then
+    ok "rockyou.txt ya disponible"
+    return 0
+  fi
+
+  if [[ ! -f "$ROCKYOU_TAR" ]]; then
+    warn "no encuentro $ROCKYOU_TAR; hace falta SecLists primero"
+    return 1
+  fi
+
+  log "extrayendo rockyou.txt desde SecLists..."
+  sudo mkdir -p "$WORDLISTS_DIR"
+
+  if ! sudo tar -xzf "$ROCKYOU_TAR" -C "$WORDLISTS_DIR"; then
+    warn "falló la extracción de rockyou.txt"
+    return 1
+  fi
+
+  sudo ln -sfn "$SECLISTS_DIR" "${WORDLISTS_DIR}/seclists"
+  ok "rockyou.txt disponible en $rockyou"
+}
+
 install_security() {
   local fallidos=0
 
-  security_apt       || fallidos=$((fallidos + 1))
-  security_go        || fallidos=$((fallidos + 1))
-  security_pipx      || fallidos=$((fallidos + 1))
-  security_docker    || fallidos=$((fallidos + 1))
-  security_wordlists || fallidos=$((fallidos + 1))
+  security_apt         || fallidos=$((fallidos + 1))
+  security_go          || fallidos=$((fallidos + 1))
+  security_pipx        || fallidos=$((fallidos + 1))
+  security_docker      || fallidos=$((fallidos + 1))
+  security_wordlists   || fallidos=$((fallidos + 1))
+  security_rockyou     || fallidos=$((fallidos + 1))
+  security_gf_patterns || fallidos=$((fallidos + 1))
 
   if [[ $fallidos -gt 0 ]]; then
     warn "capa de seguridad completada con $fallidos bloque(s) omitido(s)"
