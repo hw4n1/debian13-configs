@@ -91,6 +91,32 @@ dev_link_dotfiles() {
   ok "dotfiles de packaging enlazados"
 }
 
+sbuild_tarball() {
+  printf '%s/%s-%s.tar.zst' "$SBUILD_CACHE" "$SBUILD_SUITE" "$(dpkg --print-architecture)"
+}
+
+crear_chroot_sbuild() {
+  local modo="$1" tarball
+  tarball="$(sbuild_tarball)"
+
+  if [[ "$modo" == conservar_existente && -f "$tarball" ]]; then
+    ok "chroot de sbuild ya existe: $tarball"
+    return 0
+  fi
+
+  mkdir -p "$SBUILD_CACHE"
+
+  log "creando chroot ${SBUILD_SUITE}/$(dpkg --print-architecture) (tarda unos minutos)..."
+  if ! mmdebstrap --variant=buildd "$SBUILD_SUITE" "${tarball}.nuevo" "$SBUILD_MIRROR"; then
+    rm -f "${tarball}.nuevo"
+    warn "mmdebstrap falló; el chroot no se tocó"
+    return 1
+  fi
+
+  mv "${tarball}.nuevo" "$tarball"
+  ok "chroot listo: $tarball"
+}
+
 dev_sbuild_chroot() {
   if ! command -v mmdebstrap >/dev/null 2>&1; then
     warn "falta mmdebstrap; no puedo crear el chroot de sbuild"
@@ -109,24 +135,5 @@ dev_sbuild_chroot() {
     ok "rangos de subuid/subgid asignados"
   fi
 
-  local arch tarball
-  arch="$(dpkg --print-architecture)"
-  # sbuild busca el tarball por este nombre exacto; no lo renombres.
-  tarball="${SBUILD_CACHE}/${SBUILD_SUITE}-${arch}.tar.zst"
-
-  if [[ -f "$tarball" ]]; then
-    ok "chroot de sbuild ya existe: $tarball"
-    return 0
-  fi
-
-  mkdir -p "$SBUILD_CACHE"
-
-  log "creando chroot ${SBUILD_SUITE}/${arch} (tarda unos minutos)..."
-  if ! mmdebstrap --variant=buildd --arch="$arch" "$SBUILD_SUITE" "$tarball" "$SBUILD_MIRROR"; then
-    rm -f "$tarball"
-    warn "mmdebstrap fallo; el chroot no se creo"
-    return 1
-  fi
-
-  ok "chroot creado: $tarball"
+  crear_chroot_sbuild conservar_existente
 }

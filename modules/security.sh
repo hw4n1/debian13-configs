@@ -66,26 +66,33 @@ security_apt() {
   ok "herramientas apt instaladas"
 }
 
-security_go() {
-  if ! command -v go >/dev/null 2>&1; then
-    warn "go no está instalado; omito las herramientas de Go"
-    return 1
-  fi
+go_disponible() {
+  command -v go >/dev/null 2>&1 && return 0
+  warn "go no está instalado; omito las herramientas de Go"
+  return 1
+}
 
-  log "instalando herramientas de Go..."
+instalar_go_tools() {
+  local modo="$1" nombre
 
   export GOPATH="${GOPATH:-$HOME/go}"
   export PATH="$PATH:$GOPATH/bin"
 
-  local nombre
   for nombre in "${!GO_TOOLS[@]}"; do
-    if [[ -x "${GOPATH}/bin/${nombre}" ]]; then
+    if [[ "$modo" == omitir_existentes && -x "${GOPATH}/bin/${nombre}" ]]; then
       ok "ya instalado: $nombre"
-    else
-      log "go install: $nombre"
-      go install "${GO_TOOLS[$nombre]}" && ok "instalado: $nombre" || warn "falló: $nombre"
+      continue
     fi
+
+    log "go install: $nombre"
+    go install "${GO_TOOLS[$nombre]}" && ok "instalado: $nombre" || warn "falló: $nombre"
   done
+}
+
+security_go() {
+  go_disponible || return 1
+  log "instalando herramientas de Go..."
+  instalar_go_tools omitir_existentes
 }
 
 pipx_installed() {
@@ -147,6 +154,29 @@ gf_patterns_presentes() {
   compgen -G "${GF_PATTERNS_DIR}/*.json" >/dev/null 2>&1
 }
 
+copiar_patrones_gf() {
+  local modo="$1" temporal repo opcion_copia="-n"
+  [[ "$modo" == sobrescribir ]] && opcion_copia="-f"
+
+  temporal="$(mktemp -d)"
+  mkdir -p "$GF_PATTERNS_DIR"
+
+  for repo in "${GF_PATTERNS_REPOS[@]}"; do
+    git clone --depth 1 --quiet "$repo" "${temporal}/$(basename "$repo")" \
+      || warn "falló el clonado de $repo"
+  done
+
+  find "$temporal" -name '*.json' -exec cp "$opcion_copia" {} "$GF_PATTERNS_DIR/" \;
+  rm -rf "$temporal"
+
+  if ! gf_patterns_presentes; then
+    warn "no se copió ningún patrón de gf"
+    return 1
+  fi
+
+  ok "patrones de gf: $(find "$GF_PATTERNS_DIR" -name '*.json' | wc -l)"
+}
+
 security_gf_patterns() {
   if ! command -v gf >/dev/null 2>&1; then
     warn "gf no está instalado; omito sus patrones"
@@ -159,25 +189,7 @@ security_gf_patterns() {
   fi
 
   log "instalando patrones de gf..."
-
-  local temporal repo
-  temporal="$(mktemp -d)"
-  mkdir -p "$GF_PATTERNS_DIR"
-
-  for repo in "${GF_PATTERNS_REPOS[@]}"; do
-    git clone --depth 1 --quiet "$repo" "${temporal}/$(basename "$repo")" \
-      || warn "falló el clonado de $repo"
-  done
-
-  find "$temporal" -name '*.json' -exec cp -n {} "$GF_PATTERNS_DIR/" \;
-  rm -rf "$temporal"
-
-  if ! gf_patterns_presentes; then
-    warn "no se copió ningún patrón de gf"
-    return 1
-  fi
-
-  ok "patrones de gf instalados: $(find "$GF_PATTERNS_DIR" -name '*.json' | wc -l)"
+  copiar_patrones_gf conservar_existentes
 }
 
 security_rockyou() {
