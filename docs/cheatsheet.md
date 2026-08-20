@@ -5,7 +5,10 @@ Comandos de pentest, bug bounty y CTF organizados por fase. Primero identifica e
 Regla mental: el output de una fase es el input de la siguiente. Nunca mires el vacio preguntandote que hacer, procesa lo que la fase anterior te dio.
 
 Variables usadas: `$IP` (objetivo), `$DOMAIN` (dominio), `$URL`.
-Wordlists: se asume SecLists en /usr/share/seclists. Si no esta: `sudo git clone --depth 1 https://github.com/danielmiessler/SecLists /usr/share/seclists`.
+
+Wordlists: `--security` deja SecLists en `/usr/share/seclists` y extrae `rockyou.txt` en `/usr/share/wordlists/`, que es la ruta que asumen los comandos de abajo. Debian no empaqueta `rockyou`: sale del tarball de SecLists. Comprueba que estan con `./setup.sh --doctor`.
+
+Para bug bounty con objetivos reales usa `bb` (ver `docs/recon.md`), que filtra todo contra el alcance del programa. Lo de aqui abajo son comandos sueltos, pensados para CTF y para cuando ya sabes contra que disparas.
 
 ## Fase 0. Contexto
 
@@ -163,8 +166,10 @@ strings -n 8 binario
 
 ## Fase 6. Reversing y binarios
 
+`rizin` no esta en Debian 13: para ese caso, `kali` (el alias de Docker) o `gdb` con `pwndbg`.
+
 ```bash
-rizin -A binario          # analisis (aa dentro para analizar)
+kali                      # contenedor con el arsenal pesado (rizin, wpscan)
 gdb ./binario             # debugger
 ltrace ./binario          # llamadas a librerias
 strace ./binario          # llamadas al sistema

@@ -6,13 +6,31 @@ Regla mental: no toques nada hasta reproducir el bug. Un parche que no sabes que
 
 Estado del archivo (agosto 2026): stable = trixie (13.6), testing = forky, unstable = sid. Sin fechas de freeze anunciadas para forky. Los parches van a unstable salvo que sea un fallo de seguridad o RC.
 
-Requisitos: `./setup.sh --dev` deja instalado el kit, habilitado `deb-src` y creado el chroot de sbuild. `DEBFULLNAME` y `DEBEMAIL` van en `~/.zshrc.local`.
+Requisitos: `./setup.sh --dev` deja instalado el kit, habilitado `deb-src`, creado el chroot de sbuild y escrita la identidad. `./setup.sh --doctor` verifica que todo eso sigue en pie.
 
-Alias necesario para que `~/.quiltrc-dpkg` sirva:
+`DEBFULLNAME` y `DEBEMAIL` se derivan de tu clave GPG y se escriben en `~/.zshrc.local`. Tienen que coincidir con el uid de la clave con la que firmas: si el changelog dice un nombre y la firma dice otro, el sponsor lo devuelve.
+
+El alias `dquilt` ya viene en el `.zshrc` del repo. Sin el, quilt escribe en `./patches/` y el paquete ignora tu parche:
 
 ```bash
 alias dquilt='quilt --quiltrc=$HOME/.quiltrc-dpkg'
 ```
+
+## Como esta montada la construccion
+
+`~/.sbuildrc` (enlazado desde el repo) fija tres cosas que conviene conocer:
+
+* **Backend `unshare`.** Construye sin root y sin schroot que configurar. Va explicito porque en trixie el default sigue siendo schroot.
+* **`/dev/shm` como directorio de trabajo.** La construccion va en RAM y vuela. Para paquetes enormes (kernel, chromium, libreoffice) comenta `$unshare_tmpdir_template` o te quedas sin memoria.
+* **ccache montado en `/build/ccache`.** El chroot trae el paquete `ccache` y `$path` antepone `/usr/lib/ccache`, asi que gcc pasa por la cache sola. El directorio del host es `~/.cache/sbuild-ccache` y **tiene que existir**: si falta, sbuild aborta al montar el bind.
+
+Un chroot creado antes de esto no trae `ccache` dentro y la cache no se usa aunque el bind funcione. Recrealo:
+
+```bash
+./setup.sh --update
+```
+
+El chroot es de sid y envejece: pasadas un par de semanas empiezan los desfases de build-deps que no se explican solos. `--doctor` avisa a los 14 dias.
 
 ## Fase 0. Elegir el bug
 
@@ -48,6 +66,9 @@ apt source paquete=1.2.3-4
 # Alternativa con git: la mayoria de paquetes estan en salsa.debian.org
 gbp clone https://salsa.debian.org/equipo/paquete.git
 cd paquete && gbp pull
+
+# ~/.gbp.conf ya deja gbp construyendo con sbuild y pristine-tar activo
+gbp buildpackage
 
 # Quien lo mantiene y en que estado esta
 apt show paquete
@@ -197,3 +218,38 @@ Si no eres DD ni DM necesitas un sponsor: manda el paquete a `debian-mentors@lis
 | Ver bug | `bts show NNNNNN` |
 | Reportar bug | `reportbug paquete` |
 | Buscar trabajo | `how-can-i-help` |
+| Verificar el entorno | `./setup.sh --doctor` |
+| Refrescar el chroot | `./setup.sh --update` |
+
+## Parches por correo (upstream y kernel)
+
+Debian prefiere que el arreglo viva upstream, y buena parte de upstream (kernel, util-linux, coreutils) trabaja por lista de correo. `git-email` y `b4` vienen con `--dev`.
+
+Antes de nada, el SMTP va en `~/.gitconfig.local`, que no esta versionado:
+
+```ini
+[sendemail]
+	smtpServer = smtp.tu-proveedor.tld
+	smtpServerPort = 587
+	smtpEncryption = tls
+	smtpUser = tu@correo.tld
+```
+
+La contrasena no se escribe ahi: dejala fuera y git la pedira, o guardala en el keyring.
+
+```bash
+# Preparar la serie (format.signOff y --base ya vienen del gitconfig del repo)
+git format-patch --base=auto -o /tmp/serie origin/master
+
+# Revisar antes de mandar: esto es lo que ve la lista
+git send-email --dry-run --to=lista@vger.kernel.org /tmp/serie
+
+# A quien hay que mandarselo en el kernel
+./scripts/get_maintainer.pl -f drivers/net/algo.c
+
+# Recoger una serie ajena desde la lista y aplicarla
+b4 am 20260801.123456.abcdef@ejemplo.tld
+b4 shazam -M   # aplica directamente sobre la rama actual
+```
+
+`sendemail.confirm = always` esta puesto a proposito: obliga a mirar la cabecera antes de que salga. Un parche mal dirigido a una lista publica no se puede recoger.
