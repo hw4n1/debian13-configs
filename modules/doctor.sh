@@ -122,6 +122,24 @@ doctor_packaging() {
     check_fail "sin clave GPG secreta: no puedes firmar subidas ni RFS"
   fi
 
+  if [[ -f "$GITCONFIG_LOCAL" ]] && grep -q 'email' "$GITCONFIG_LOCAL"; then
+    check_ok "identidad de git en ${GITCONFIG_LOCAL/#$HOME/\~}"
+  else
+    check_fail "$GITCONFIG_LOCAL no define la identidad de git"
+  fi
+
+  if [[ -n "$(git config --get user.signingkey || true)" ]]; then
+    check_ok "clave de firma de git configurada"
+  else
+    check_warn "git sin user.signingkey: no podrás firmar tags"
+  fi
+
+  if [[ -d "$CCACHE_DIR_SBUILD" ]]; then
+    check_ok "ccache de sbuild en ${CCACHE_DIR_SBUILD/#$HOME/\~}"
+  else
+    check_fail "falta $CCACHE_DIR_SBUILD: sbuild abortará al montar el bind de ccache"
+  fi
+
   if grep -q "^${USER}:" /etc/subuid && grep -q "^${USER}:" /etc/subgid; then
     check_ok "rangos subuid/subgid asignados a $USER"
   else

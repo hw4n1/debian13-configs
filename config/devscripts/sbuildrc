@@ -22,4 +22,16 @@ $lintian_opts = ['-i', '-I', '--pedantic'];
 $run_piuparts = 0;
 $run_autopkgtest = 0;
 
+$build_environment = {
+    'CCACHE_DIR'     => '/build/ccache',
+    'CCACHE_MAXSIZE' => '4G',
+};
+$path = '/usr/lib/ccache:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin';
+$extra_binds = [
+    {
+        directory  => $ENV{'HOME'} . '/.cache/sbuild-ccache',
+        mountpoint => '/build/ccache',
+    },
+];
+
 1;

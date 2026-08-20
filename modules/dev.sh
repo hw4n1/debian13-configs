@@ -9,17 +9,62 @@ DEV_DOTFILES=(
   "devscripts/sbuildrc|.sbuildrc"
   "devscripts/quiltrc-dpkg|.quiltrc-dpkg"
   "devscripts/devscripts|.devscripts"
+  "git/gitconfig|.gitconfig"
+  "gbp/gbp.conf|.gbp.conf"
 )
 
 ZSHRC_LOCAL="${HOME}/.zshrc.local"
+GITCONFIG_LOCAL="${HOME}/.gitconfig.local"
+CCACHE_DIR_SBUILD="${HOME}/.cache/sbuild-ccache"
 
 gpg_uid_primaria() {
   gpg --list-secret-keys --with-colons 2>/dev/null \
     | awk -F: '$1 == "uid" { print $10; exit }'
 }
 
+gpg_huella_primaria() {
+  gpg --list-secret-keys --with-colons 2>/dev/null \
+    | awk -F: '$1 == "fpr" { print $10; exit }'
+}
+
 nombre_de_uid() { sed -E 's/ *[(<].*//' <<<"$1"; }
 correo_de_uid() { sed -nE 's/.*<([^>]+)>.*/\1/p' <<<"$1"; }
+
+dev_identidad_git() {
+  if [[ -f "$GITCONFIG_LOCAL" ]]; then
+    ok "identidad de git ya definida en ${GITCONFIG_LOCAL/#$HOME/\~}"
+    return 0
+  fi
+
+  local uid nombre correo huella directorio
+  uid="$(gpg_uid_primaria)"
+  nombre="$(git config --get user.name || true)"
+  correo="$(git config --get user.email || true)"
+  huella="$(gpg_huella_primaria)"
+
+  [[ -n "$nombre" ]] || nombre="$(nombre_de_uid "$uid")"
+  [[ -n "$correo" ]] || correo="$(correo_de_uid "$uid")"
+
+  if [[ -z "$nombre" || -z "$correo" ]]; then
+    warn "sin identidad de git ni clave GPG; configura user.name y user.email antes"
+    return 1
+  fi
+
+  log "escribiendo identidad de git en $GITCONFIG_LOCAL"
+  {
+    printf '[user]\n'
+    printf '\tname = %s\n' "$nombre"
+    printf '\temail = %s\n' "$correo"
+    [[ -n "$huella" ]] && printf '\tsigningkey = %s\n' "$huella"
+
+    while read -r directorio; do
+      [[ -n "$directorio" ]] || continue
+      printf '[safe]\n\tdirectory = %s\n' "$directorio"
+    done < <(git config --get-all safe.directory || true)
+  } >"$GITCONFIG_LOCAL"
+
+  ok "identidad de git: $nombre <$correo>"
+}
 
 dev_identidad_packaging() {
   if [[ -f "$ZSHRC_LOCAL" ]] && grep -q '^export DEBEMAIL=' "$ZSHRC_LOCAL"; then
@@ -104,10 +149,11 @@ crear_chroot_sbuild() {
     return 0
   fi
 
-  mkdir -p "$SBUILD_CACHE"
+  mkdir -p "$SBUILD_CACHE" "$CCACHE_DIR_SBUILD"
 
   log "creando chroot ${SBUILD_SUITE}/$(dpkg --print-architecture) (tarda unos minutos)..."
-  if ! mmdebstrap --variant=buildd "$SBUILD_SUITE" "${tarball}.nuevo" "$SBUILD_MIRROR"; then
+  if ! mmdebstrap --variant=buildd --include=ccache,eatmydata \
+       "$SBUILD_SUITE" "${tarball}.nuevo" "$SBUILD_MIRROR"; then
     rm -f "${tarball}.nuevo"
     warn "mmdebstrap falló; el chroot no se tocó"
     return 1

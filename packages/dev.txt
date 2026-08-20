@@ -18,6 +18,10 @@ equivs
 git-buildpackage
 pristine-tar
 dgit
+git-email
+b4
+# Cache de compilacion entre construcciones
+ccache
 # Parches y comparacion de fuentes
 patchutils
 wdiff

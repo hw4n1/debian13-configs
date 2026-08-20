@@ -114,6 +114,7 @@ main() {
   if $do_dev; then
     run_step "kit de packaging"        dev_debian_packaging
     run_step "deb-src"                 dev_enable_deb_src
+    run_step "identidad de git"        dev_identidad_git
     run_step "dotfiles de packaging"   dev_link_dotfiles
     run_step "identidad de packaging"  dev_identidad_packaging
     run_step "chroot sbuild (unshare)" dev_sbuild_chroot
