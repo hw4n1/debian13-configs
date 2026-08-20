@@ -1,31 +1,21 @@
 #!/usr/bin/env bash
 
+COMPONENTES_DEBIAN="main contrib non-free non-free-firmware"
+
 enable_repos() {
   local fuentes patron
-
-  if [[ -f /etc/apt/sources.list.d/debian.sources ]]; then
-    fuentes="/etc/apt/sources.list.d/debian.sources"
-    patron='s/^(Components:.*)$/\1 contrib non-free non-free-firmware/'
-  elif [[ -s /etc/apt/sources.list ]]; then
-    fuentes="/etc/apt/sources.list"
-    patron='s/ main$/ main contrib non-free non-free-firmware/'
-  else
+  fuentes="$(apt_sources_file)" || {
     warn "no encuentro un archivo de fuentes conocido; revisalo a mano"
     return 1
+  }
+
+  if apt_sources_is_deb822 "$fuentes"; then
+    patron="s/^(Components:[[:space:]]*)main.*\$/\\1${COMPONENTES_DEBIAN}/"
+  else
+    patron="s/^(deb(-src)?[[:space:]]+\\S+[[:space:]]+\\S+[[:space:]]+)main.*\$/\\1${COMPONENTES_DEBIAN}/"
   fi
 
-  if grep -q "contrib" "$fuentes"; then
-    ok "repos contrib/non-free ya habilitados"
-    return 0
-  fi
-
-  log "habilitando contrib/non-free en $fuentes"
-  sudo cp "$fuentes" "$(backup_path "$fuentes")"
-  sudo sed -i -E "$patron" "$fuentes"
-
-  log "actualizando indices de apt..."
-  sudo apt-get update -qq
-  ok "repos habilitados"
+  edit_apt_sources "$fuentes" "$patron" 'contrib' 'repos contrib/non-free'
 }
 
 set_timezone() {

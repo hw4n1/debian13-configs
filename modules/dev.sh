@@ -17,40 +17,22 @@ dev_debian_packaging() {
   ok "kit de packaging instalado"
 }
 
-# Trixie usa deb822 y deja deb-src deshabilitado; sin esto "apt source" falla.
 dev_enable_deb_src() {
   local fuentes patron habilitado
-
-  if [[ -f /etc/apt/sources.list.d/debian.sources ]]; then
-    fuentes="/etc/apt/sources.list.d/debian.sources"
-    patron='s/^(Types:[[:space:]]*deb)$/\1 deb-src/'
-    habilitado='^Types:.*[[:space:]]deb-src'
-  elif [[ -s /etc/apt/sources.list ]]; then
-    fuentes="/etc/apt/sources.list"
-    patron='s/^#[[:space:]]*(deb-src[[:space:]])/\1/'
-    habilitado='^deb-src[[:space:]]'
-  else
+  fuentes="$(apt_sources_file)" || {
     warn "no encuentro un archivo de fuentes conocido; habilita deb-src a mano"
     return 1
+  }
+
+  if apt_sources_is_deb822 "$fuentes"; then
+    patron='s/^(Types:[[:space:]]*deb)$/\1 deb-src/'
+    habilitado='^Types:.*[[:space:]]deb-src'
+  else
+    patron='s/^#[[:space:]]*(deb-src[[:space:]])/\1/'
+    habilitado='^deb-src[[:space:]]'
   fi
 
-  if grep -qE "$habilitado" "$fuentes"; then
-    ok "deb-src ya habilitado en $fuentes"
-    return 0
-  fi
-
-  log "habilitando deb-src en $fuentes"
-  sudo cp "$fuentes" "$(backup_path "$fuentes")"
-  sudo sed -i -E "$patron" "$fuentes"
-
-  if ! grep -qE "$habilitado" "$fuentes"; then
-    warn "no pude habilitar deb-src en $fuentes; revisalo a mano"
-    return 1
-  fi
-
-  log "actualizando indices de apt..."
-  sudo apt-get update -qq
-  ok "deb-src habilitado"
+  edit_apt_sources "$fuentes" "$patron" "$habilitado" 'deb-src'
 }
 
 dev_link_dotfiles() {
