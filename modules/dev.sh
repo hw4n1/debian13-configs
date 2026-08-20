@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# Chroot de sbuild: sid es lo que espera el archivo para subir parches.
 SBUILD_SUITE="unstable"
 SBUILD_MIRROR="http://deb.debian.org/debian"
 SBUILD_CACHE="${HOME}/.cache/sbuild"
@@ -171,7 +170,6 @@ dev_sbuild_chroot() {
     return 1
   fi
 
-  # El backend unshare necesita rangos de subuid/subgid para el usuario.
   if ! grep -q "^${USER}:" /etc/subuid || ! grep -q "^${USER}:" /etc/subgid; then
     log "asignando rangos de subuid/subgid a ${USER}..."
     if ! sudo usermod --add-subuids 100000-165535 --add-subgids 100000-165535 "$USER"; then

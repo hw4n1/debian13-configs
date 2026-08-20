@@ -1,16 +1,4 @@
-# ~/.devscripts - lo leen debuild, dch, bts y debdiff
-
-# Lintian con info y pedantic tras cada debuild, igual que en el sbuildrc.
 DEBUILD_LINTIAN_OPTS="-i -I --pedantic"
-
-# Sin firmar (-us -uc): se firma al subir, no en cada construccion de prueba.
-# -i -I ignoran ficheros de VCS al generar el diff y el tarball.
 DEBUILD_DPKG_BUILDPACKAGE_OPTS="-us -uc -i -I"
-
-# dch decide si abre una entrada nueva o edita la actual mirando el changelog
-# (si la ultima entrada es UNRELEASED, sigue en ella) en vez de la version.
 DEBCHANGE_RELEASE_HEURISTIC=changelog
-
-# debdiff pasa debian/control por wdiff: los cambios de dependencias se ven
-# palabra a palabra en vez de como una linea entera reescrita.
 DEBDIFF_WDIFF_SOURCE_CONTROL=yes

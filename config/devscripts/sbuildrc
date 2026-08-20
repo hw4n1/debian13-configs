@@ -1,24 +1,11 @@
-# ~/.sbuildrc - configuracion de sbuild (es Perl, tiene que terminar en "1;")
-
-# El backend va explicito a proposito: en trixie (sbuild 0.89.x) el default
-# sigue siendo schroot, y solo en sid/forky (0.91.x) pasa a ser unshare.
-# Con unshare el chroot se monta sin root y sin schroot configurado.
 $chroot_mode = 'unshare';
-
-# /dev/shm es tmpfs: la construccion va en RAM y vuela. Para paquetes enormes
-# (kernel, chromium, libreoffice) comenta esta linea o te quedas sin memoria;
-# sbuild caera al /tmp del disco.
 $unshare_tmpdir_template = '/dev/shm/tmp.sbuild.XXXXXXXXXX';
 
-# Construye tambien los binarios Architecture: all.
 $build_arch_all = 1;
 
-# Lintian sobre el .changes al terminar, con info y pedantic para ver todo
-# lo que un revisor de Debian vera.
 $run_lintian = 1;
 $lintian_opts = ['-i', '-I', '--pedantic'];
 
-# Apagados por defecto: son lentos y solo interesan antes de subir.
 $run_piuparts = 0;
 $run_autopkgtest = 0;
 

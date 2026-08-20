@@ -16,21 +16,55 @@ El alias `dquilt` ya viene en el `.zshrc` del repo. Sin el, quilt escribe en `./
 alias dquilt='quilt --quiltrc=$HOME/.quiltrc-dpkg'
 ```
 
-## Como esta montada la construccion
+## Los dotfiles de packaging
 
-`~/.sbuildrc` (enlazado desde el repo) fija tres cosas que conviene conocer:
+Tres ficheros del repo se enlazan a tu home y deciden como se construye todo. Esta es la referencia de por que cada opcion esta donde esta.
 
-* **Backend `unshare`.** Construye sin root y sin schroot que configurar. Va explicito porque en trixie el default sigue siendo schroot.
-* **`/dev/shm` como directorio de trabajo.** La construccion va en RAM y vuela. Para paquetes enormes (kernel, chromium, libreoffice) comenta `$unshare_tmpdir_template` o te quedas sin memoria.
-* **ccache montado en `/build/ccache`.** El chroot trae el paquete `ccache` y `$path` antepone `/usr/lib/ccache`, asi que gcc pasa por la cache sola. El directorio del host es `~/.cache/sbuild-ccache` y **tiene que existir**: si falta, sbuild aborta al montar el bind.
+### `~/.sbuildrc`
 
-Un chroot creado antes de esto no trae `ccache` dentro y la cache no se usa aunque el bind funcione. Recrealo:
+Es **Perl**, no shell: tiene que terminar en `1;` o sbuild lo rechaza entero.
 
-```bash
-./setup.sh --update
-```
+| Opcion | Que hace y por que |
+|--------|--------------------|
+| `$chroot_mode = 'unshare'` | Monta el chroot sin root y sin schroot que configurar. Va explicito porque en trixie (sbuild 0.89.x) el default sigue siendo schroot; solo en sid/forky (0.91.x) pasa a ser unshare. |
+| `$unshare_tmpdir_template` en `/dev/shm` | `/dev/shm` es tmpfs: la construccion va en RAM y vuela. Para paquetes enormes (kernel, chromium, libreoffice) comenta la linea o te quedas sin memoria; sbuild caera al `/tmp` del disco. |
+| `$build_arch_all = 1` | Construye tambien los binarios `Architecture: all`. |
+| `$run_lintian` con `-i -I --pedantic` | Lintian sobre el `.changes` al terminar, con todo lo que un revisor de Debian vera. |
+| `$run_piuparts = 0`, `$run_autopkgtest = 0` | Apagados por defecto: son lentos y solo interesan justo antes de subir. Lanzalos a mano (fase 4). |
+| `$build_environment` + `$path` + `$extra_binds` | ccache montado en `/build/ccache`. El chroot trae el paquete `ccache` y `$path` antepone `/usr/lib/ccache`, asi que gcc pasa por la cache solo. El directorio del host es `~/.cache/sbuild-ccache` y **tiene que existir**: si falta, sbuild aborta al montar el bind. |
+
+Un chroot creado antes de que existiera esta configuracion no trae `ccache` dentro, y la cache no se usa aunque el bind funcione. Recrealo con `./setup.sh --update`.
 
 El chroot es de sid y envejece: pasadas un par de semanas empiezan los desfases de build-deps que no se explican solos. `--doctor` avisa a los 14 dias.
+
+El backend unshare necesita ademas rangos de subuid/subgid para tu usuario. `--dev` los asigna, pero `usermod` se niega si el usuario tiene procesos activos; si falla, hazlo desde un TTY o tras reiniciar:
+
+```bash
+sudo usermod --add-subuids 100000-165535 --add-subgids 100000-165535 "$USER"
+```
+
+### `~/.quiltrc-dpkg`
+
+Fija `QUILT_PATCHES="debian/patches"`. Sin eso, quilt escribe en `./patches/`: el parche se aplica en tu arbol, el paquete lo ignora y la construccion sale limpia **sin llevar tu cambio**. Es el error silencioso mas comun al empezar, porque nada falla.
+
+Solo sirve a traves del alias, que ya viene en el `.zshrc` del repo:
+
+```bash
+alias dquilt='quilt --quiltrc=$HOME/.quiltrc-dpkg'
+```
+
+El resto son las opciones de diff que espera un paquete Debian: `-p ab`, sin timestamps y sin `--index`, para que el parche no lleve ruido que el mantenedor tenga que quitar.
+
+### `~/.devscripts`
+
+Lo leen `debuild`, `dch`, `bts` y `debdiff`.
+
+| Variable | Que hace y por que |
+|----------|--------------------|
+| `DEBUILD_LINTIAN_OPTS="-i -I --pedantic"` | Lintian tras cada `debuild`, igual que en el sbuildrc: mismo criterio en las dos rutas de construccion. |
+| `DEBUILD_DPKG_BUILDPACKAGE_OPTS="-us -uc -i -I"` | `-us -uc` no firma: se firma al subir, no en cada construccion de prueba. `-i -I` ignoran ficheros de VCS al generar el diff y el tarball. |
+| `DEBCHANGE_RELEASE_HEURISTIC=changelog` | `dch` decide si abre una entrada nueva o edita la actual mirando el changelog (si la ultima es `UNRELEASED`, sigue en ella) en vez de la version. |
+| `DEBDIFF_WDIFF_SOURCE_CONTROL=yes` | `debdiff` pasa `debian/control` por wdiff: los cambios de dependencias se ven palabra a palabra en vez de como una linea entera reescrita. |
 
 ## Fase 0. Elegir el bug
 
