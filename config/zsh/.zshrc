@@ -36,6 +36,7 @@ alias dquilt='quilt --quiltrc=$HOME/.quiltrc-dpkg'
 alias clear='printf "\033c"'
 
 export PATH="$HOME/go/bin:$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+[[ -d /usr/lib/ccache ]] && export PATH="/usr/lib/ccache:$PATH"
 
 export EDITOR="${EDITOR:-nano}"
 export VISUAL="$EDITOR"
