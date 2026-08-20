@@ -20,22 +20,28 @@ alias dquilt='quilt --quiltrc=$HOME/.quiltrc-dpkg'
 
 Tres ficheros del repo se enlazan a tu home y deciden como se construye todo. Esta es la referencia de por que cada opcion esta donde esta.
 
-### `~/.sbuildrc`
+### `~/.config/sbuild/config.pl`
 
 Es **Perl**, no shell: tiene que terminar en `1;` o sbuild lo rechaza entero.
+
+Ojo con la ruta. sbuild busca primero `~/.config/sbuild/config.pl` y **solo si no existe** cae a `~/.sbuildrc`. Si tienes los dos, el segundo se ignora del todo y sin decir nada: tu configuracion parece estar puesta y no se aplica ninguna opcion. `--dev` retira el `~/.sbuildrc` viejo si apunta a este repo, y `--doctor` falla si reaparece.
 
 | Opcion | Que hace y por que |
 |--------|--------------------|
 | `$chroot_mode = 'unshare'` | Monta el chroot sin root y sin schroot que configurar. Va explicito porque en trixie (sbuild 0.89.x) el default sigue siendo schroot; solo en sid/forky (0.91.x) pasa a ser unshare. |
+| `$clean_source = 0` | Sin esto, sbuild ejecuta `debian/rules clean` **en el host** antes de construir, lo que exige tener las build-deps instaladas en tu maquina: justo lo que el chroot existe para evitar. Falla con `E: Failed to clean source directory`, que no dice nada del motivo real. |
 | `$unshare_tmpdir_template` en `/dev/shm` | `/dev/shm` es tmpfs: la construccion va en RAM y vuela. Para paquetes enormes (kernel, chromium, libreoffice) comenta la linea o te quedas sin memoria; sbuild caera al `/tmp` del disco. |
 | `$build_arch_all = 1` | Construye tambien los binarios `Architecture: all`. |
 | `$run_lintian` con `-i -I --pedantic` | Lintian sobre el `.changes` al terminar, con todo lo que un revisor de Debian vera. |
 | `$run_piuparts = 0`, `$run_autopkgtest = 0` | Apagados por defecto: son lentos y solo interesan justo antes de subir. Lanzalos a mano (fase 4). |
-| `$build_environment` + `$path` + `$extra_binds` | ccache montado en `/build/ccache`. El chroot trae el paquete `ccache` y `$path` antepone `/usr/lib/ccache`, asi que gcc pasa por la cache solo. El directorio del host es `~/.cache/sbuild-ccache` y **tiene que existir**: si falta, sbuild aborta al montar el bind. |
 
-Un chroot creado antes de que existiera esta configuracion no trae `ccache` dentro, y la cache no se usa aunque el bind funcione. Recrealo con `./setup.sh --update`.
+El chroot es de sid y envejece: pasadas un par de semanas empiezan los desfases de build-deps que no se explican solos. `--doctor` avisa a los 14 dias y `--update` lo recrea.
 
-El chroot es de sid y envejece: pasadas un par de semanas empiezan los desfases de build-deps que no se explican solos. `--doctor` avisa a los 14 dias.
+### Sobre ccache
+
+`ccache` se aplica a los builds del **host** (`debuild -b`), no a los del chroot: el `.zshrc` antepone `/usr/lib/ccache` al PATH y gcc pasa por la cache solo.
+
+Dentro del chroot no. Se intento montar un directorio del host en `/build/ccache` con `$unshare_bind_mounts`, y el backend unshare de sbuild 0.89.3 falla el bind (`mount failed`, con un errno enganoso porque sbuild imprime `$!` despues de un `system()`). No merece la pena pelearlo: el ciclo donde recompilas una y otra vez es `debuild` en el arbol, y ahi la cache si funciona. `sbuild` es la validacion limpia final, donde partir de cero es justamente el objetivo.
 
 El backend unshare necesita ademas rangos de subuid/subgid para tu usuario. `--dev` los asigna, pero `usermod` se niega si el usuario tiene procesos activos; si falla, hazlo desde un TTY o tras reiniciar:
 

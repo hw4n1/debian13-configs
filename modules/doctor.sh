@@ -134,10 +134,16 @@ doctor_packaging() {
     check_warn "git sin user.signingkey: no podrás firmar tags"
   fi
 
-  if [[ -d "$CCACHE_DIR_SBUILD" ]]; then
-    check_ok "ccache de sbuild en $(ruta_corta "$CCACHE_DIR_SBUILD")"
+  if [[ -e "$SBUILDRC_OBSOLETO" ]]; then
+    check_fail "$SBUILDRC_OBSOLETO existe: ~/.config/sbuild/config.pl tiene precedencia y lo deja sin efecto"
   else
-    check_fail "falta $CCACHE_DIR_SBUILD: sbuild abortará al montar el bind de ccache"
+    check_ok "sin ~/.sbuildrc obsoleto compitiendo con config.pl"
+  fi
+
+  if [[ ":$PATH:" == *":/usr/lib/ccache:"* ]]; then
+    check_ok "ccache delante en el PATH (acelera debuild en el host)"
+  else
+    check_warn "ccache fuera del PATH: los builds en el host no usan cache"
   fi
 
   if grep -q "^${USER}:" /etc/subuid && grep -q "^${USER}:" /etc/subgid; then

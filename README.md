@@ -50,8 +50,8 @@ El modulo `--dev` deja la maquina lista para arreglar bugs en paquetes del archi
 
 * Kit de packaging: devscripts, debhelper, dh-make, quilt, lintian, licensecheck, sbuild, git-buildpackage, pristine-tar, dgit, patchutils, wdiff, piuparts, autopkgtest, dput-ng, reportbug, how-can-i-help.
 * `deb-src` habilitado tanto en el `sources.list` clasico como en las fuentes deb822, sin el cual `apt source` no funciona.
-* Dotfiles por symlink: `~/.sbuildrc`, `~/.quiltrc-dpkg`, `~/.devscripts`, `~/.gitconfig` y `~/.gbp.conf`.
-* Chroot de sbuild de unstable con `ccache` dentro, creado con `mmdebstrap` sobre el backend unshare.
+* Dotfiles por symlink: `~/.config/sbuild/config.pl`, `~/.quiltrc-dpkg`, `~/.devscripts`, `~/.gitconfig` y `~/.gbp.conf`.
+* Chroot de sbuild de unstable, creado con `mmdebstrap` sobre el backend unshare.
 * Identidad derivada de tu clave GPG: `DEBFULLNAME` y `DEBEMAIL` a `~/.zshrc.local`, y nombre, correo y `user.signingkey` a `~/.gitconfig.local`.
 * Parches por correo: `git-email` y `b4`, para mandar arreglos upstream y al kernel.
 * Toolchain de Rust via rustup, mas las dependencias nativas de compilacion habituales.
@@ -109,7 +109,8 @@ La identidad de packaging (`DEBFULLNAME`, `DEBEMAIL`) no esta versionada: `--dev
 |   `-- dev.txt           # paquetes de desarrollo
 |-- config/               # dotfiles reales (enlazados por symlink)
 |   |-- bin/bb            # helper de engagement de bug bounty
-|   |-- devscripts/       # sbuildrc, quiltrc-dpkg, devscripts (packaging)
+|   |-- sbuild/config.pl  # configuracion de sbuild (Perl)
+|   |-- devscripts/       # quiltrc-dpkg, devscripts (packaging)
 |   |-- git/ gbp/         # gitconfig y gbp.conf
 |   `-- i3/ polybar/ picom/ kitty/ rofi/ dunst/ zsh/ autorandr/ wallpapers/
 `-- docs/                 # arsenal.md, cheatsheet.md, packaging.md, recon.md
@@ -154,9 +155,9 @@ El modulo `--dev` ya cubre el flujo de packaging de Debian, los parches por corr
 * El teclado se fija a `latam` en el arranque de i3; cambialo en `config/i3/config` si usas otra distribucion de teclas.
 * `--security` anade tu usuario al grupo `docker`, lo que equivale a acceso root en la maquina.
 * `--ai` y `--hardware` instalan via `curl | sh` desde claude.ai y sh.rustup.rs.
-* `--dev` usa el backend `unshare` de sbuild (construccion sin root, sin schroot que configurar). Va explicito en `~/.sbuildrc` porque en trixie el default sigue siendo schroot.
+* `--dev` usa el backend `unshare` de sbuild (construccion sin root, sin schroot que configurar). Va explicito en `~/.config/sbuild/config.pl` porque en trixie el default sigue siendo schroot.
 * `--dev` crea el chroot de unstable en `~/.cache/sbuild` la primera vez; son unos minutos de descarga. Si ya existe el tarball, el paso no hace nada; `--update` lo recrea.
-* `~/.sbuildrc` monta `~/.cache/sbuild-ccache` dentro del chroot. Ese directorio tiene que existir o sbuild aborta al montar el bind; `--dev` lo crea.
+* sbuild prefiere `~/.config/sbuild/config.pl` sobre `~/.sbuildrc` y, si existen los dos, ignora el segundo en silencio. `--dev` retira el viejo y `--doctor` avisa si reaparece.
 * `--dev` enlaza `~/.gitconfig`, respaldando el que hubiera. Tu identidad se preserva: se escribe antes en `~/.gitconfig.local`, que el del repo incluye.
 * Las API keys de subfinder no estan versionadas y no deben estarlo. Ver `docs/recon.md`.
 

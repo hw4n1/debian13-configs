@@ -5,7 +5,7 @@ SBUILD_MIRROR="http://deb.debian.org/debian"
 SBUILD_CACHE="${HOME}/.cache/sbuild"
 
 DEV_DOTFILES=(
-  "devscripts/sbuildrc|.sbuildrc"
+  "sbuild/config.pl|.config/sbuild/config.pl"
   "devscripts/quiltrc-dpkg|.quiltrc-dpkg"
   "devscripts/devscripts|.devscripts"
   "git/gitconfig|.gitconfig"
@@ -14,7 +14,6 @@ DEV_DOTFILES=(
 
 ZSHRC_LOCAL="${HOME}/.zshrc.local"
 GITCONFIG_LOCAL="${HOME}/.gitconfig.local"
-CCACHE_DIR_SBUILD="${HOME}/.cache/sbuild-ccache"
 
 gpg_uid_primaria() {
   gpg --list-secret-keys --with-colons 2>/dev/null \
@@ -119,8 +118,19 @@ dev_enable_deb_src() {
   edit_apt_sources "$fuentes" "$patron" "$habilitado" 'deb-src'
 }
 
+SBUILDRC_OBSOLETO="${HOME}/.sbuildrc"
+
+dev_retirar_sbuildrc_obsoleto() {
+  [[ -L "$SBUILDRC_OBSOLETO" ]] || return 0
+  [[ "$(readlink -f "$SBUILDRC_OBSOLETO")" == "${REPO_DIR}"/* ]] || return 0
+
+  rm -f "$SBUILDRC_OBSOLETO"
+  ok "retirado $(ruta_corta "$SBUILDRC_OBSOLETO"): lo gana ~/.config/sbuild/config.pl"
+}
+
 dev_link_dotfiles() {
   log "enlazando dotfiles de packaging..."
+  dev_retirar_sbuildrc_obsoleto
 
   local fallidos=0 entrada origen destino
   for entrada in "${DEV_DOTFILES[@]}"; do
@@ -155,11 +165,11 @@ crear_chroot_sbuild() {
     return 0
   fi
 
-  mkdir -p "$SBUILD_CACHE" "$CCACHE_DIR_SBUILD"
+  mkdir -p "$SBUILD_CACHE"
   rm -rf "$temporal"
 
   log "creando chroot ${SBUILD_SUITE}/$(dpkg --print-architecture) (tarda unos minutos)..."
-  if ! mmdebstrap --variant=buildd --include=ccache,eatmydata \
+  if ! mmdebstrap --variant=buildd --include=eatmydata \
        "$SBUILD_SUITE" "$temporal" "$SBUILD_MIRROR"; then
     rm -rf "$temporal"
     warn "mmdebstrap falló; el chroot anterior no se tocó"
