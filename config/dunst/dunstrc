@@ -1,33 +1,82 @@
+# ── aureola ── notificaciones
+# Paleta: config/theme/aureola.conf
+
 [global]
 	follow	= mouse
-	width	= 350
-	height	= (0, 120)
+	width	= (280, 380)
+	height	= (0, 160)
 	origin	= top-right
-	offset	= (15, 40)
-	padding	= 12
-	horizontal_padding	= 12
+	offset	= (22, 56)
+	gap_size	= 8
+	scale	= 0
+	notification_limit	= 5
+
+	progress_bar	= true
+	progress_bar_height	= 8
+	progress_bar_frame_width	= 0
+	progress_bar_corner_radius	= 4
+
+	padding	= 14
+	horizontal_padding	= 14
+	text_icon_padding	= 10
 	frame_width	= 2
-	corner_radius	= 10
-	font	= JetBrainsMono Nerd Font 10
-	format	= "<b>%s</b>\n%b"
-	frame_color	= "#cba6f7"
+	corner_radius	= 14
+	separator_height	= 2
 	separator_color	= frame
 
+	font	= Comfortaa 11
+	line_height	= 2
+	markup	= full
+	format	= "<b>%s</b>\n%b"
+	alignment	= left
+	vertical_alignment	= center
+	word_wrap	= true
+	ellipsize	= end
+	ignore_newline	= no
+
+	icon_position	= left
+	min_icon_size	= 24
+	max_icon_size	= 48
+	icon_theme	= "Papirus-Dark, Adwaita"
+	enable_recursive_icon_lookup	= true
+
+	sticky_history	= yes
+	history_length	= 25
+	idle_threshold	= 120
+	show_age_threshold	= 60
+	stack_duplicates	= true
+	hide_duplicate_count	= false
+	show_indicators	= no
+
+	mouse_left_click	= do_action, close_current
+	mouse_middle_click	= close_all
+	mouse_right_click	= close_current
+
 [urgency_low]
-	background	= "#1e1e2e"
-	foreground	= "#cdd6f4"
-	frame_color	= "#94e2d5"
+	background	= "#e612121c"
+	foreground	= "#9fb0cf"
+	frame_color	= "#8fbce6"
+	highlight	= "#8fbce6"
 	timeout	= 5
+	format	= "󰜗 <b>%s</b>\n%b"
 
 [urgency_normal]
-	background	= "#1e1e2e"
-	foreground	= "#cdd6f4"
-	frame_color	= "#cba6f7"
+	background	= "#f2171622"
+	foreground	= "#dee5f3"
+	frame_color	= "#f2a8c0"
+	highlight	= "#f2a8c0"
 	timeout	= 8
+	format	= "󰋑 <b>%s</b>\n%b"
+
 [urgency_critical]
-	background	= "#1e1e2e"
-	foreground	= "#f38ba8"
-	frame_color	= "#f38ba8"
+	background	= "#f2211622"
+	foreground	= "#dee5f3"
+	frame_color	= "#ef8fa8"
+	highlight	= "#ef8fa8"
 	timeout	= 0
+	format	= "󰀦 <b>%s</b>\n%b"
 
-
+# La barra de volumen/brillo que manda el escritorio: sin icono duplicado
+[volumen]
+	appname	= "*volume*"
+	format	= "󰕾 <b>%s</b>"

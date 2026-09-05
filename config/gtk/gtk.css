@@ -1,0 +1,40 @@
+/* ── aureola ── retoques sobre Adwaita-dark
+   Paleta: config/theme/aureola.conf
+   Solo redefine los colores con nombre que usa el tema; no reescribe widgets. */
+
+@define-color theme_bg_color        #171622;
+@define-color theme_base_color      #12121c;
+@define-color theme_fg_color        #dee5f3;
+@define-color theme_text_color      #dee5f3;
+
+@define-color theme_selected_bg_color  #f2a8c0;
+@define-color theme_selected_fg_color  #171622;
+
+@define-color insensitive_fg_color  #565575;
+@define-color insensitive_bg_color  #232232;
+@define-color borders               #302f43;
+@define-color unfocused_borders     #232232;
+
+@define-color accent_bg_color       #f2a8c0;
+@define-color accent_fg_color       #171622;
+@define-color accent_color          #f2a8c0;
+
+@define-color warning_color         #f0dcae;
+@define-color error_color           #ef8fa8;
+@define-color success_color         #9fe0cf;
+
+@define-color link_color            #8fbce6;
+@define-color visited_link_color    #c4b6f2;
+
+/* Esquinas suaves a juego con picom */
+window.background,
+window.csd,
+popover.background,
+menu {
+	border-radius: 12px;
+}
+
+tooltip.background {
+	background-color: #12121c;
+	border-radius: 10px;
+}

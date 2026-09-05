@@ -1,0 +1,25 @@
+# Dependencias de construccion del kernel de Linux.
+# build-essential, git y ccache los trae packages/dev.txt.
+
+# Necesarias para 'make menuconfig' y para compilar
+flex
+bison
+libncurses-dev
+libelf-dev
+libssl-dev
+bc
+rsync
+kmod
+cpio
+zstd
+# BTF: sin pahole, CONFIG_DEBUG_INFO_BTF no enlaza
+dwarves
+# Analisis estatico del arbol: make C=1 (sparse) y make coccicheck
+sparse
+coccinelle
+# Construccion alternativa con LLVM=1 (el kernel la soporta de serie)
+clang
+llvm
+lld
+# make tags, para saltar por el arbol sin depender del LSP
+universal-ctags

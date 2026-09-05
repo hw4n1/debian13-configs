@@ -8,6 +8,7 @@ source "${SCRIPT_DIR}/modules/desktop.sh"
 source "${SCRIPT_DIR}/modules/security.sh"
 source "${SCRIPT_DIR}/modules/ai.sh"
 source "${SCRIPT_DIR}/modules/dev.sh"
+source "${SCRIPT_DIR}/modules/editor.sh"
 source "${SCRIPT_DIR}/modules/hardware.sh"
 source "${SCRIPT_DIR}/modules/doctor.sh"
 source "${SCRIPT_DIR}/modules/update.sh"
@@ -23,7 +24,7 @@ Uso: ${0##*/} [opciones]
 Módulos:
   --desktop     entorno i3 + dotfiles + fuente + zsh
   --security    herramientas de pentest/bug bounty/CTF
-  --dev         herramientas de desarrollo y packaging Debian
+  --dev         packaging Debian, kernel y editor (neovim)
   --ai          Claude Desktop y Claude Code
   --hardware    herramientas específicas de hardware (asusctl)
   --all         todos los módulos
@@ -97,8 +98,9 @@ main() {
   if $do_desktop; then
     run_step "shell (zsh)"     install_shell
     run_step "escritorio i3"   install_desktop
-    run_step "Nerd Font"       install_nerd_font
+    run_step "fuentes"         install_fonts
     run_step "dotfiles"        link_dotfiles
+    run_step "greeter"         install_greeter
     run_step "zsh por defecto" set_default_shell
   fi
 
@@ -118,6 +120,11 @@ main() {
     run_step "dotfiles de packaging"   dev_link_dotfiles
     run_step "identidad de packaging"  dev_identidad_packaging
     run_step "chroot sbuild (unshare)" dev_sbuild_chroot
+    run_step "deps del kernel"         dev_kernel_deps
+    run_step "deps de neovim"          editor_deps
+    run_step "neovim"                  editor_neovim
+    run_step "config de neovim"        editor_link_config
+    run_step "plugins de neovim"       editor_plugins
   fi
 
   report_skipped_steps

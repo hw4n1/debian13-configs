@@ -14,20 +14,24 @@ No es un volcado de dotfiles: es un instalador con modulos, listas de paquetes d
 
 ## Entorno de escritorio
 
-i3 con configuracion coherente en tema Catppuccin Mocha.
+i3 con identidad visual propia: **aureola**, una paleta muestreada del wallpaper (`config/wallpapers/angel.jpg`) — base violeta-noche, acentos hielo y rosa. Detalle completo en `docs/tema.md`.
 
 | Componente      | Herramienta                                          |
 |-----------------|------------------------------------------------------|
 | Window manager  | i3                                                   |
 | Barra           | polybar (multi-monitor, indicador VPN, acceso arandr)|
-| Compositor      | picom (transparencias, blur, esquinas redondeadas)   |
+| Compositor      | picom (blur, esquinas redondeadas, animaciones con curva propia) |
 | Terminal        | kitty                                                |
 | Lanzador        | rofi                                                 |
 | Notificaciones  | dunst                                                |
-| Shell           | zsh (prompt propio, autosuggestions, highlighting)   |
-| Fuente          | JetBrainsMono Nerd Font                              |
+| Shell           | zsh (prompt de dos lineas, autosuggestions, highlighting) |
+| Apps GTK        | Adwaita-dark + Papirus-Dark con los colores de la paleta |
+| Login           | lightdm-gtk-greeter con el mismo fondo y fuente      |
+| Fuentes         | Comfortaa (interfaz) + Maple Mono NF (mono, ligaduras e iconos) |
 | Multi-monitor   | autorandr (perfiles y fallback automatico)           |
 | Extras          | scratchpad, greenclip, wallpaper (feh), Firefox      |
+
+Los atajos de gestion de ventanas estan en `docs/i3.md`, y `Super+F1` los abre en rofi sin salir del escritorio. La paleta, la tipografia y los glifos de cada workspace estan en `docs/tema.md`.
 
 ## Herramientas de seguridad
 
@@ -58,6 +62,27 @@ El modulo `--dev` deja la maquina lista para arreglar bugs en paquetes del archi
 
 Ver `docs/packaging.md` para el flujo completo por fases: elegir el bug, obtener el fuente, reproducir, parchear, validar y enviar.
 
+## Kernel de Linux
+
+El mismo `--dev` deja la maquina lista para construir y parchear el kernel:
+
+* Dependencias de construccion (`packages/kernel.txt`): flex, bison, cabeceras de ncurses/elf/ssl, `bc`, `pahole` (sin el, `CONFIG_DEBUG_INFO_BTF` no enlaza), y clang/llvm/lld para construir con `LLVM=1`.
+* Analisis estatico: `sparse` (`make C=1`) y `coccinelle` (`make coccicheck`).
+* Neovim con clangd sobre `compile_commands.json`, y `checkpatch.pl` y `get_maintainer.pl` integrados como comandos del editor.
+
+Ver `docs/kernel.md` para el flujo: clonar el arbol correcto, construirlo, generar la base de datos que clangd necesita y revisar el parche antes de mandarlo.
+
+## Editor
+
+Neovim, configurado para leer C del kernel y preparar parches.
+
+* No viene de apt a proposito: Debian 13 congela la 0.10.4 y la configuracion necesita 0.11 o mas por `vim.lsp.config`. `modules/editor.sh` instala el tarball oficial en `~/.local`, con la version fijada en el modulo.
+* LSP con la API nativa de Neovim, sin `nvim-lspconfig`: clangd afinado para el kernel (sin insercion de includes, sin clang-tidy, con `--query-driver`), mas lua_ls, bashls y rust-analyzer si estan presentes.
+* Comandos propios: `:Checkpatch`, `:Maintainers`, `:CompileCommands`, `:KernelRoot`.
+* Estilo del kernel automatico en ficheros C (tabs de 8, `cinoptions` del `coding-style.rst`, marcas en 80 y 100), y ningun formateo al guardar.
+* Ocho plugins, fijados por `lazy-lock.json`, que vive en el repo porque `~/.config/nvim` es un enlace al propio repo: mismo commit, mismo editor.
+* Tema **aureola**: la paleta del escritorio tambien en el editor.
+
 ## Uso
 
 ```bash
@@ -67,7 +92,7 @@ cd ~/setup
 ./setup.sh --help          # opciones
 ./setup.sh --desktop       # solo el entorno i3
 ./setup.sh --security      # solo herramientas de seguridad
-./setup.sh --dev           # packaging Debian, chroot sbuild y toolchains
+./setup.sh --dev           # packaging Debian, kernel, editor y chroot sbuild
 ./setup.sh --ai            # Claude Desktop y Claude Code
 ./setup.sh --hardware      # asusctl (portatiles ASUS ROG)
 ./setup.sh --all           # todo
@@ -97,7 +122,8 @@ La identidad de packaging (`DEBFULLNAME`, `DEBEMAIL`) no esta versionada: `--dev
 |   |-- base.sh           # preparacion del sistema (repos, zona horaria)
 |   |-- desktop.sh        # entorno i3, dotfiles, fuente, zsh
 |   |-- security.sh       # herramientas de pentest
-|   |-- dev.sh            # packaging Debian, chroot sbuild y toolchains
+|   |-- dev.sh            # packaging Debian, kernel, chroot sbuild y toolchains
+|   |-- editor.sh         # neovim (tarball upstream) y sus plugins
 |   |-- ai.sh             # Claude Desktop y Claude Code
 |   |-- hardware.sh       # asusctl (ASUS ROG)
 |   |-- doctor.sh         # verificacion del estado (--doctor)
@@ -106,14 +132,18 @@ La identidad de packaging (`DEBFULLNAME`, `DEBEMAIL`) no esta versionada: `--dev
 |   |-- shell.txt         # zsh y plugins
 |   |-- desktop.txt       # paquetes del escritorio
 |   |-- security.txt      # paquetes de seguridad
-|   `-- dev.txt           # paquetes de desarrollo
+|   |-- dev.txt           # paquetes de desarrollo
+|   |-- kernel.txt        # dependencias de build del kernel
+|   `-- nvim.txt          # lo que necesita el editor (clangd, ripgrep)
 |-- config/               # dotfiles reales (enlazados por symlink)
 |   |-- bin/bb            # helper de engagement de bug bounty
+|   |-- bin/i3-help       # chuleta de atajos de i3 (Super+F1)
 |   |-- sbuild/config.pl  # configuracion de sbuild (Perl)
 |   |-- devscripts/       # quiltrc-dpkg, devscripts (packaging)
 |   |-- git/ gbp/         # gitconfig y gbp.conf
+|   |-- nvim/             # config de neovim + lazy-lock.json (enlazado entero)
 |   `-- i3/ polybar/ picom/ kitty/ rofi/ dunst/ zsh/ autorandr/ wallpapers/
-`-- docs/                 # arsenal.md, cheatsheet.md, packaging.md, recon.md
+`-- docs/                 # arsenal.md, cheatsheet.md, i3.md, kernel.md, packaging.md, recon.md
 ```
 
 Separacion de responsabilidades: `lib/` reusable, `modules/` logica por area, `packages/` datos, `config/` contenido, y `setup.sh` decide que corre.
@@ -129,10 +159,10 @@ Separacion de responsabilidades: `lib/` reusable, `modules/` logica por area, `p
 
 ## En progreso
 
-El modulo `--dev` ya cubre el flujo de packaging de Debian, los parches por correo y la toolchain de Rust via rustup. Falta anadir:
+El modulo `--dev` ya cubre el packaging de Debian, el kernel, el editor y la toolchain de Rust. Falta anadir:
 
 * The Tor Project: C tor (autotools) y Arti (Rust).
-* Linux kernel: dependencias de build y configuracion de `get_maintainer.pl`.
+* Un `tree-sitter-cli` reciente, para poder anadir `nvim-treesitter` (el de Debian 13 se queda corto; ver `docs/kernel.md`).
 
 ## Roadmap
 
@@ -143,6 +173,7 @@ El modulo `--dev` ya cubre el flujo de packaging de Debian, los parches por corr
 * [x] Modulos `--ai` y `--hardware`
 * [x] Verificacion del estado (`--doctor`) y actualizacion (`--update`)
 * [x] Helper de engagement con control de alcance (`bb`)
+* [x] Kernel de Linux: dependencias de build y editor (`--dev`)
 * [ ] Funcion para binarios de GitHub (linpeas, chisel, Burp)
 * [ ] Perfiles de autorandr versionados
 
@@ -158,6 +189,7 @@ El modulo `--dev` ya cubre el flujo de packaging de Debian, los parches por corr
 * `--dev` usa el backend `unshare` de sbuild (construccion sin root, sin schroot que configurar). Va explicito en `~/.config/sbuild/config.pl` porque en trixie el default sigue siendo schroot.
 * `--dev` crea el chroot de unstable en `~/.cache/sbuild` la primera vez; son unos minutos de descarga. Si ya existe el tarball, el paso no hace nada; `--update` lo recrea.
 * sbuild prefiere `~/.config/sbuild/config.pl` sobre `~/.sbuildrc` y, si existen los dos, ignora el segundo en silencio. `--dev` retira el viejo y `--doctor` avisa si reaparece.
+* Neovim no sale de apt: Debian 13 trae 0.10.4 y la configuracion necesita 0.11 por `vim.lsp.config`. Se instala el tarball oficial en `~/.local/nvim`, con la version fijada en `modules/editor.sh`; `--update` la revisa y `--doctor` avisa si el `nvim` del PATH no es ese.
 * `--dev` enlaza `~/.gitconfig`, respaldando el que hubiera. Tu identidad se preserva: se escribe antes en `~/.gitconfig.local`, que el del repo incluye.
 * Las API keys de subfinder no estan versionadas y no deben estarlo. Ver `docs/recon.md`.
 

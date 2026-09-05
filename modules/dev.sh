@@ -10,6 +10,7 @@ DEV_DOTFILES=(
   "devscripts/devscripts|.devscripts"
   "git/gitconfig|.gitconfig"
   "gbp/gbp.conf|.gbp.conf"
+  "nvim|.config/nvim"
 )
 
 ZSHRC_LOCAL="${HOME}/.zshrc.local"
@@ -98,6 +99,12 @@ dev_debian_packaging() {
   log "instalando kit de packaging de Debian..."
   apt_install_list "${REPO_DIR}/packages/dev.txt"
   ok "kit de packaging instalado"
+}
+
+dev_kernel_deps() {
+  log "instalando las dependencias de construccion del kernel..."
+  apt_install_list "${REPO_DIR}/packages/kernel.txt"
+  ok "dependencias del kernel instaladas"
 }
 
 dev_enable_deb_src() {

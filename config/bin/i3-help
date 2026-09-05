@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+#
+# Muestra el cheatsheet de i3 (docs/i3.md) sin salir del escritorio.
+#
+#   i3-help          lista buscable de atajos en rofi
+#   i3-help --doc    el documento completo en una terminal flotante
+#
+# La unica fuente de verdad es docs/i3.md: este script lo parsea, no copia nada.
+
+set -euo pipefail
+
+# Resuelve el repo aunque se invoque desde el symlink de ~/.local/bin
+SCRIPT_PATH="$(readlink -f "$0")"
+REPO_DIR="$(dirname "$(dirname "$(dirname "$SCRIPT_PATH")")")"
+DOC="${REPO_DIR}/docs/i3.md"
+
+if [[ ! -f "$DOC" ]]; then
+  echo "i3-help: no encuentro $DOC" >&2
+  exit 1
+fi
+
+abrir_doc() {
+  if command -v kitty >/dev/null 2>&1; then
+    exec kitty --class i3-help -e less -R "$DOC"
+  else
+    exec x-terminal-emulator -e less -R "$DOC"
+  fi
+}
+
+# Convierte las tablas del markdown en lineas "atajo  descripcion  [seccion]"
+extraer_atajos() {
+  awk '
+    function limpia(s) {
+      gsub(/^[ \t]+|[ \t]+$/, "", s)
+      gsub(/`/, "", s)
+      gsub(/\*\*/, "", s)
+      return s
+    }
+    /^## / { seccion = substr($0, 4); next }
+    /^\|/ {
+      if ($0 ~ /^\|[ :-]*-+/) next          # linea separadora de la tabla
+      n = split($0, campo, "|")
+      if (n < 4) next
+      atajo = limpia(campo[2])
+      desc  = limpia(campo[3])
+      if (atajo == "Atajo" || atajo == "Tecla" || atajo == "" || desc == "") next
+      printf "%-32s %-46s [%s]\n", atajo, desc, seccion
+    }
+  ' "$DOC"
+}
+
+case "${1:-}" in
+  --doc|-d) abrir_doc ;;
+  --list|-l) extraer_atajos ;;
+  --help|-h) sed -n '3,8p' "$SCRIPT_PATH" | sed 's/^# \{0,1\}//' ;;
+  "")
+    if command -v rofi >/dev/null 2>&1; then
+      extraer_atajos | rofi -dmenu -i -no-custom \
+        -p "i3" -mesg "Enter abre el documento completo" \
+        -theme-str 'window {width: 60%;} listview {lines: 18;}' >/dev/null && abrir_doc
+    else
+      abrir_doc
+    fi
+    ;;
+  *) echo "i3-help: opcion desconocida '$1' (usa --help)" >&2; exit 1 ;;
+esac

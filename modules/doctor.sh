@@ -163,6 +163,69 @@ doctor_packaging() {
   done
 }
 
+doctor_editor() {
+  seccion "Editor"
+
+  local instalada
+  instalada="$(nvim_version_instalada "$NVIM_BIN" || true)"
+
+  if [[ -z "$instalada" ]]; then
+    check_fail "neovim ausente en $(ruta_corta "$NVIM_BIN"): ./setup.sh --dev"
+  elif [[ "$instalada" != "$NVIM_VERSION" ]]; then
+    check_warn "neovim $instalada, el repo fija $NVIM_VERSION: ./setup.sh --update"
+  else
+    check_ok "neovim $instalada"
+  fi
+
+  # El nvim del PATH tiene que ser el nuestro. El de Debian es 0.10.4 y la
+  # config usa vim.lsp.config, de 0.11: con el arranca llena de errores.
+  local en_path
+  en_path="$(command -v nvim || true)"
+  if [[ -n "$en_path" && "$(readlink -f "$en_path")" != "$(readlink -f "$NVIM_BIN")" ]]; then
+    check_warn "el nvim del PATH es $en_path, no $(ruta_corta "$NVIM_BIN")"
+  fi
+
+  local lockfile="${NVIM_CONFIG_DIR}/lazy-lock.json"
+  if [[ -f "$lockfile" ]]; then
+    check_ok "plugins fijados en lazy-lock.json: $(grep -c '"commit"' "$lockfile") entrada(s)"
+  else
+    check_warn "sin lazy-lock.json: los plugins no estan fijados (abre nvim y :Lazy sync)"
+  fi
+
+  if [[ -d "${HOME}/.local/share/nvim/lazy" ]]; then
+    check_ok "plugins instalados en ~/.local/share/nvim/lazy"
+  else
+    check_fail "plugins sin instalar: nvim --headless '+Lazy! sync' +qa"
+  fi
+
+  if [[ "$(basename "${EDITOR:-}")" == "nvim" ]]; then
+    check_ok "EDITOR apunta a nvim"
+  else
+    check_warn "EDITOR=${EDITOR:-<sin definir>}: los commits y el changelog no abriran nvim"
+  fi
+
+  check_comando clangd "./setup.sh --dev"
+  check_comando rg "./setup.sh --dev"
+}
+
+doctor_kernel() {
+  seccion "Kernel"
+
+  local comando
+  for comando in flex bison bc pahole sparse ctags; do
+    check_comando "$comando" "./setup.sh --dev"
+  done
+
+  # coccinelle instala el binario como spatch, no como 'coccinelle'
+  check_comando spatch "./setup.sh --dev"
+
+  if pkg_installed libelf-dev && pkg_installed libssl-dev && pkg_installed libncurses-dev; then
+    check_ok "cabeceras de elf, ssl y ncurses presentes"
+  else
+    check_fail "faltan cabeceras de construccion: 'make menuconfig' o el enlazado fallaran"
+  fi
+}
+
 doctor_seguridad() {
   seccion "Herramientas de seguridad"
 
@@ -251,10 +314,20 @@ doctor_shell() {
     check_fail "EDITOR sin definir: dch, bts y reportbug abrirán un editor al azar"
   fi
 
-  if fc-list 2>/dev/null | grep -qi "${NERD_FONT} Nerd Font"; then
-    check_ok "${NERD_FONT} Nerd Font instalada"
+  local entrada familia
+  for entrada in "${FUENTES_ZIP[@]}"; do
+    familia="${entrada%%|*}"
+    if fc-list 2>/dev/null | grep -qi "$familia"; then
+      check_ok "$familia instalada"
+    else
+      check_warn "$familia ausente: la terminal y los iconos caerán a la fuente de reserva"
+    fi
+  done
+
+  if fc-list 2>/dev/null | grep -qi "Comfortaa"; then
+    check_ok "Comfortaa instalada"
   else
-    check_warn "${NERD_FONT} Nerd Font ausente: polybar caerá a texto"
+    check_warn "Comfortaa ausente (apt install fonts-comfortaa): la interfaz caerá a otra sans"
   fi
 }
 
@@ -265,6 +338,8 @@ run_doctor() {
   doctor_apt
   doctor_shell
   doctor_packaging
+  doctor_editor
+  doctor_kernel
   doctor_seguridad
 
   printf '\n'

@@ -54,6 +54,29 @@ update_sbuild_chroot() {
   crear_chroot_sbuild recrear
 }
 
+update_neovim() {
+  # instalar_neovim compara versiones: si ya esta la fijada, no descarga nada.
+  log "revisando neovim ${NVIM_VERSION}..."
+  instalar_neovim conservar_existente
+}
+
+update_nvim_plugins() {
+  if [[ ! -x "$NVIM_BIN" ]]; then
+    warn "neovim no esta instalado; omito sus plugins"
+    return 1
+  fi
+
+  # 'Lazy! update' reescribe lazy-lock.json, que vive en el repo: despues de
+  # esto el arbol queda sucio a proposito, para poder revisar el salto.
+  log "actualizando los plugins de neovim..."
+  if ! "$NVIM_BIN" --headless "+Lazy! update" +qa 2>&1 | tail -n 5; then
+    warn "lazy.nvim fallo; abre nvim y ejecuta :Lazy update a mano"
+    return 1
+  fi
+
+  ok "plugins actualizados; revisa el diff de config/nvim/lazy-lock.json"
+}
+
 run_update() {
   local fallidos=0
 
@@ -63,6 +86,8 @@ run_update() {
   update_gf_patterns       || fallidos=$((fallidos + 1))
   update_seclists          || fallidos=$((fallidos + 1))
   update_sbuild_chroot     || fallidos=$((fallidos + 1))
+  update_neovim            || fallidos=$((fallidos + 1))
+  update_nvim_plugins      || fallidos=$((fallidos + 1))
 
   if [[ $fallidos -gt 0 ]]; then
     warn "actualización terminada con $fallidos bloque(s) omitido(s)"
