@@ -7,12 +7,27 @@ dpkg-dev
 fakeroot
 quilt
 lintian
-# Construccion en chroot limpio
+licensecheck
+# Construccion en chroot limpio (backend unshare, sin root)
 sbuild
-schroot
-debootstrap
+mmdebstrap
+uidmap
+zstd
+equivs
 # Flujo con git
 git-buildpackage
+pristine-tar
+dgit
+git-email
+b4
+# Cache de compilacion entre construcciones
+ccache
+# Parches y comparacion de fuentes
+patchutils
+wdiff
+# BTS y busqueda de trabajo
+reportbug
+how-can-i-help
 # Testing del paquete
 piuparts
 autopkgtest

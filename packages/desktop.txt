@@ -24,8 +24,10 @@ pulseaudio-utils
 # Red
 network-manager
 network-manager-gnome
-# Iconos y utilidades de escritorio
+# Iconos, fuentes y utilidades de escritorio
 papirus-icon-theme
+fonts-comfortaa
+fonts-dejavu-core
 brightnessctl
 maim
 xclip

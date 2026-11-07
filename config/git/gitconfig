@@ -1,0 +1,70 @@
+[include]
+	path = ~/.gitconfig.local
+
+[init]
+	defaultBranch = main
+
+[pull]
+	rebase = true
+
+[rebase]
+	autosquash = true
+	autostash = true
+
+[rerere]
+	enabled = true
+	autoupdate = true
+
+[fetch]
+	prune = true
+	pruneTags = true
+
+[push]
+	default = simple
+	autoSetupRemote = true
+
+[diff]
+	algorithm = histogram
+	colorMoved = zebra
+	renames = copies
+
+[merge]
+	conflictstyle = zdiff3
+
+[tag]
+	gpgsign = true
+	sort = version:refname
+
+[log]
+	date = iso
+
+[branch]
+	sort = -committerdate
+
+[format]
+	signOff = true
+	coverLetter = auto
+	useAutoBase = true
+
+[sendemail]
+	annotate = true
+	confirm = always
+	suppresscc = self
+	chainReplyTo = false
+	thread = true
+
+[am]
+	threeWay = true
+
+[apply]
+	whitespace = fix
+
+[core]
+	pager = less -FRX
+
+[alias]
+	st = status --short --branch
+	lg = log --oneline --graph --decorate
+	ri = rebase --interactive
+	fixup = commit --fixup
+	patches = format-patch --base=auto

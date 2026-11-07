@@ -1,0 +1,10 @@
+# ── aureola ── apps GTK2 antiguas
+gtk-theme-name="Adwaita-dark"
+gtk-icon-theme-name="Papirus-Dark"
+gtk-cursor-theme-name="Adwaita"
+gtk-cursor-theme-size=24
+gtk-font-name="Comfortaa 11"
+gtk-xft-antialias=1
+gtk-xft-hinting=1
+gtk-xft-hintstyle="hintslight"
+gtk-xft-rgba="rgb"

@@ -1,49 +1,154 @@
+/* ── aureola ── lanzador
+   Paleta: config/theme/aureola.conf
+
+   @theme "/dev/null" descarta el tema por defecto de rofi: si no, sus reglas
+   de `element` (mas especificas) ganan sobre las de este fichero y las filas
+   alternas salen en crema. */
+
+@theme "/dev/null"
+
 configuration {
-	modi: "drun,run,window";
-	show-icons: true;
-	icon-theme: "Papirus";
-	display-drun: " ";
-	display-run: " ";
-	display-window: " ";
-	drun-display-format: "{name}";
+	modi:	"drun,run,window";
+	show-icons:	true;
+	icon-theme:	"Papirus-Dark";
+	display-drun:	"󰋑";
+	display-run:	"󰓎";
+	display-window:	"󰖔";
+	drun-display-format:	"{name}";
+	me-select-entry:	"MousePrimary";
+	me-accept-entry:	"MouseDPrimary";
 }
 
 * {
-	bg:	#1e1e2e;
-	bg-alt:	#313244;
-	fg:	#cdd6f4;
-	accent:	#cba6f7;
+	crypt:		#0e0e15;
+	base:		#171622f2;
+	surface0:	#232232;
+	surface1:	#302f43;
+	overlay:	#565575;
+	subtext:	#9fb0cf;
+	text:		#dee5f3;
+	halo:		#b9d4f0;
+	rose:		#f2a8c0;
+	lavanda:	#c4b6f2;
 
 	background-color:	transparent;
-	text-color:	@fg;
-	font:	"JetBrainsMono Nerd Font 11";
+	text-color:	@text;
+	font:	"Comfortaa 12";
 }
 
 window {
-	background-color:	@bg;
+	background-color:	@base;
 	border:	2px;
-	border-color:	@accent;
-	border-radius:	12px;
-	width:	620px;
-	padding:	16px;
+	border-color:	@rose;
+	border-radius:	18px;
+	width:	640px;
+	padding:	18px;
+	location:	center;
+	transparency:	"real";
+}
+
+mainbox {
+	spacing:	12px;
+	children:	[ inputbar, message, listview ];
 }
 
 inputbar {
-	background-color:	@bg-alt;
-	border-radius:	8px;
-	padding:	10px;
-	spacing:	8px;
+	background-color:	@surface0;
+	border-radius:	12px;
+	padding:	12px 14px;
+	spacing:	10px;
 	children:	[ prompt, entry ];
 }
 
-prompt { text-color: @accent; }
-entry { placeholder: "Buscar..."; placeholder-color: #6c7086; }
-
-listview { lines: 8; spacing: 4px; padding: 12px 0 0 0; }
-
-element { padding: 8px; border-radius: 8px; }
-element selected {
-	background-color: @accent;
-	text-color: @bg;
+prompt {
+	text-color:	@rose;
+	font:	"Maple Mono NF 13";
+	vertical-align:	0.5;
 }
-element-icon { size: 22px; }
+
+entry {
+	placeholder:	"buscar entre las nubes…";
+	placeholder-color:	@overlay;
+	vertical-align:	0.5;
+	cursor:	text;
+}
+
+message {
+	background-color:	@surface0;
+	border-radius:	10px;
+	padding:	8px 12px;
+}
+
+textbox {
+	text-color:	@subtext;
+	font:	"Comfortaa 11";
+}
+
+listview {
+	lines:	8;
+	spacing:	4px;
+	padding:	4px 0 0 0;
+	scrollbar:	true;
+	fixed-height:	false;
+	dynamic:	true;
+}
+
+scrollbar {
+	handle-color:	@surface1;
+	handle-width:	4px;
+	border-radius:	4px;
+}
+
+element {
+	padding:	9px 12px;
+	border-radius:	10px;
+	spacing:	10px;
+	cursor:	pointer;
+}
+
+element normal.normal {
+	background-color:	transparent;
+	text-color:	@text;
+}
+
+element alternate.normal {
+	background-color:	transparent;
+	text-color:	@text;
+}
+
+element normal.active,
+element alternate.active {
+	background-color:	transparent;
+	text-color:	@halo;
+}
+
+element normal.urgent,
+element alternate.urgent {
+	background-color:	transparent;
+	text-color:	@rose;
+}
+
+element selected.normal {
+	background-color:	@rose;
+	text-color:	@crypt;
+}
+
+element selected.active {
+	background-color:	@lavanda;
+	text-color:	@crypt;
+}
+
+element selected.urgent {
+	background-color:	@halo;
+	text-color:	@crypt;
+}
+
+element-icon {
+	size:	24px;
+	vertical-align:	0.5;
+}
+
+element-text {
+	vertical-align:	0.5;
+	highlight:	bold underline;
+}

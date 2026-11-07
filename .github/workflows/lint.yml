@@ -19,12 +19,19 @@ jobs:
           find . -name '*.sh' -not -path './.git/*' -print0 \
             | xargs -0 -n1 bash -n
           bash -n config/autorandr/postswitch
+          bash -n config/bin/bb
 
       - name: shellcheck
         run: |
           find . -name '*.sh' -not -path './.git/*' -print0 \
             | xargs -0 shellcheck -x -e SC1091
           shellcheck -e SC1091 config/autorandr/postswitch
+          shellcheck config/bin/bb
+
+      - name: Los scripts ejecutables tienen el bit de ejecucion
+        run: |
+          test -x setup.sh
+          test -x config/bin/bb
 
   configs:
     runs-on: ubuntu-latest
@@ -42,3 +49,26 @@ jobs:
           sed -e 's/#.*//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' packages/*.txt \
             | grep -v '^$' | sort -u > /tmp/pkgs.txt
           test -s /tmp/pkgs.txt
+
+          # madison devuelve una fila por suite: "pkg | version | suite | archs".
+          # La suite trae el componente pegado cuando no es main (stable/non-free),
+          # asi que se acepta "stable" y "stable/*". Un paquete inexistente
+          # devuelve cuerpo vacio con codigo 200: por eso se mira el contenido.
+          faltan=0
+          while read -r pkg; do
+            if curl -fsS --max-time 25 --retry 3 --retry-delay 2 \
+                 "https://api.ftp-master.debian.org/madison?package=${pkg}" \
+               | awk -F'|' '{ gsub(/ /, "", $3)
+                              if ($3 == "stable" || $3 ~ /^stable\//) hallado = 1 }
+                            END { exit !hallado }'; then
+              echo "ok        $pkg"
+            else
+              echo "NO ESTA   $pkg"
+              faltan=$((faltan + 1))
+            fi
+          done < /tmp/pkgs.txt
+
+          if [ "$faltan" -gt 0 ]; then
+            echo "::error::$faltan paquete(s) sin fila para stable en el archivo de Debian"
+            exit 1
+          fi

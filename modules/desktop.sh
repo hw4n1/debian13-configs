@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
-NERD_FONT="JetBrainsMono"
+# Fuentes que no vienen por apt: "familia|carpeta|url del zip"
+# Maple Mono NF (redondeada, con ligaduras) trae ademas todos los glifos de
+# Nerd Fonts, asi que cubre texto e iconos de la terminal, la barra y el prompt.
+FUENTES_ZIP=(
+  "Maple Mono NF|MapleMono|https://github.com/subframe7536/maple-font/releases/latest/download/MapleMono-NF.zip"
+)
 
 install_shell() {
   log "instalando CLI..."
@@ -24,8 +29,13 @@ DOTFILES=(
   "kitty/kitty.conf|.config/kitty/kitty.conf"
   "rofi/config.rasi|.config/rofi/config.rasi"
   "autorandr/postswitch|.config/autorandr/postswitch"
+  "bin/i3-help|.local/bin/i3-help"
   "wallpapers/angel.jpg|.config/wallpapers/angel.jpg"
   "zsh/.zshrc|.zshrc"
+  "gtk/settings.ini|.config/gtk-3.0/settings.ini"
+  "gtk/gtk.css|.config/gtk-3.0/gtk.css"
+  "gtk/settings.ini|.config/gtk-4.0/settings.ini"
+  "gtk/gtkrc-2.0|.gtkrc-2.0"
 )
 
 link_dotfiles() {
@@ -46,35 +56,46 @@ link_dotfiles() {
   ok "dotfiles enlazados"
 }
 
-nerd_font_installed() {
-  fc-list 2>/dev/null | grep -qi "${NERD_FONT} Nerd Font"
+fuente_instalada() {
+  fc-list 2>/dev/null | grep -qi "$1"
 }
 
-install_nerd_font() {
-  if nerd_font_installed; then
-    ok "Nerd Font ya instalada"
+instalar_fuente_zip() {
+  local familia="$1" carpeta="$2" url="$3"
+
+  if fuente_instalada "$familia"; then
+    ok "fuente ya instalada: $familia"
     return 0
   fi
 
-  command -v unzip >/dev/null 2>&1 || { warn "falta unzip para descomprimir la fuente"; return 1; }
+  command -v unzip >/dev/null 2>&1 || { warn "falta unzip para descomprimir $familia"; return 1; }
 
-  local url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/${NERD_FONT}.zip"
-  local destino="$HOME/.local/share/fonts/${NERD_FONT}"
+  local destino="$HOME/.local/share/fonts/${carpeta}"
   local descarga
-  descarga="$(mktemp -t "${NERD_FONT}.XXXXXX.zip")"
+  descarga="$(mktemp -t "${carpeta}.XXXXXX.zip")"
 
-  log "descargando ${NERD_FONT} Nerd Font..."
+  log "descargando ${familia}..."
   if ! curl -fsSL "$url" -o "$descarga"; then
     rm -f "$descarga"
-    warn "no se pudo descargar la fuente (¿sin red?); polybar seguirá con texto"
+    warn "no se pudo descargar ${familia} (¿sin red?); se usará la fuente de reserva"
     return 1
   fi
 
   mkdir -p "$destino"
-  unzip -oq "$descarga" -d "$destino"
+  unzip -oq "$descarga" -d "$destino" -x "*.otf" "*/LICENSE*" "*/README*"
   fc-cache -f "$destino" >/dev/null
   rm -f "$descarga"
-  ok "Nerd Font instalada"
+  ok "fuente instalada: $familia"
+}
+
+install_fonts() {
+  local fallidos=0 entrada familia carpeta url
+  for entrada in "${FUENTES_ZIP[@]}"; do
+    IFS='|' read -r familia carpeta url <<<"$entrada"
+    instalar_fuente_zip "$familia" "$carpeta" "$url" || fallidos=$((fallidos + 1))
+  done
+
+  [[ $fallidos -eq 0 ]]
 }
 
 set_default_shell() {

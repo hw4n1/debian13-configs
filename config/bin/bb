@@ -1,0 +1,190 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BOUNTY_DIR="${BOUNTY_DIR:-$HOME/bounty}"
+
+log() { printf '[*] %s\n' "$*"; }
+ok()  { printf '[+] %s\n' "$*"; }
+die() { printf '[x] %s\n' "$*" >&2; exit 1; }
+
+directorio_objetivo() { printf '%s/%s' "$BOUNTY_DIR" "$1"; }
+fichero_scope()       { printf '%s/scope.txt' "$(directorio_objetivo "$1")"; }
+directorio_recon()    { printf '%s/recon' "$(directorio_objetivo "$1")"; }
+
+exigir_objetivo() {
+  [[ -n "${1:-}" ]] || die "falta el objetivo"
+  [[ -d "$(directorio_objetivo "$1")" ]] || die "objetivo desconocido: $1 (créalo con: bb new $1)"
+}
+
+exigir_scope() {
+  [[ -s "$(fichero_scope "$1")" ]] \
+    || die "$(fichero_scope "$1") está vacío: define el alcance antes de escanear"
+}
+
+exigir_comandos() {
+  local comando
+  for comando in "$@"; do
+    command -v "$comando" >/dev/null 2>&1 || die "falta $comando (./setup.sh --security)"
+  done
+}
+
+dominios_raiz() { sed -E 's/^\*\.//' "$(fichero_scope "$1")" | grep -v '^$' | sort -u; }
+
+filtrar_por_scope() {
+  awk '
+    NR == FNR {
+      sub(/^\*\./, "", $0)
+      if ($0 !~ /^[[:space:]]*$/) dominios[$0] = 1
+      next
+    }
+    {
+      host = $1
+      sub(/^https?:\/\//, "", host)
+      sub(/[:\/].*$/, "", host)
+      for (d in dominios)
+        if (host == d || host ~ ("\\." d "$")) { print; next }
+    }
+  ' "$1" -
+}
+
+contar() {
+  if [[ -s "$1" ]]; then
+    wc -l <"$1"
+  else
+    printf '0'
+  fi
+}
+
+cmd_new() {
+  local objetivo="${1:-}"
+  [[ -n "$objetivo" ]] || die "uso: bb new <objetivo>"
+
+  local base scope
+  base="$(directorio_objetivo "$objetivo")"
+  mkdir -p "$base"/{recon,nuclei,notes,loot}
+
+  scope="$(fichero_scope "$objetivo")"
+  [[ -f "$scope" ]] || printf '%s\n' "$objetivo" >"$scope"
+
+  ok "objetivo listo en $base"
+  log "revisa $scope antes de lanzar bb recon $objetivo"
+}
+
+cmd_recon() {
+  exigir_objetivo "${1:-}"
+  exigir_scope "$1"
+  exigir_comandos subfinder dnsx httpx anew
+
+  local objetivo="$1" scope salida
+  scope="$(fichero_scope "$objetivo")"
+  salida="$(directorio_recon "$objetivo")"
+  mkdir -p "$salida"
+
+  log "buscando subdominios..."
+  dominios_raiz "$objetivo" \
+    | xargs -r -I{} subfinder -d {} -all -silent \
+    | filtrar_por_scope "$scope" \
+    | anew "${salida}/subdominios.txt" >/dev/null
+
+  log "resolviendo..."
+  dnsx -l "${salida}/subdominios.txt" -silent -a -resp \
+    | anew "${salida}/resueltos.txt" >/dev/null
+
+  log "comprobando hosts vivos..."
+  httpx -l "${salida}/subdominios.txt" -silent -title -tech-detect -status-code \
+    -o "${salida}/vivos.txt"
+
+  ok "$(contar "${salida}/subdominios.txt") subdominios, $(contar "${salida}/vivos.txt") vivos"
+}
+
+cmd_urls() {
+  exigir_objetivo "${1:-}"
+  exigir_scope "$1"
+  exigir_comandos gau katana anew
+
+  local objetivo="$1" scope salida
+  scope="$(fichero_scope "$objetivo")"
+  salida="$(directorio_recon "$objetivo")"
+  mkdir -p "$salida"
+
+  log "URLs históricas..."
+  dominios_raiz "$objetivo" | gau --subs --threads 5 \
+    | filtrar_por_scope "$scope" \
+    | anew "${salida}/urls.txt" >/dev/null
+
+  if [[ -s "${salida}/vivos.txt" ]]; then
+    log "crawling activo..."
+    awk '{print $1}' "${salida}/vivos.txt" \
+      | katana -silent -d 2 \
+      | filtrar_por_scope "$scope" \
+      | anew "${salida}/urls.txt" >/dev/null
+  fi
+
+  ok "$(contar "${salida}/urls.txt") URLs en ${salida}/urls.txt"
+}
+
+cmd_scan() {
+  exigir_objetivo "${1:-}"
+  exigir_comandos nuclei
+
+  local objetivo="$1" vivos salida
+  vivos="$(directorio_recon "$objetivo")/vivos.txt"
+  [[ -s "$vivos" ]] || die "no hay hosts vivos: lanza antes bb recon $objetivo"
+
+  salida="$(directorio_objetivo "$objetivo")/nuclei"
+  mkdir -p "$salida"
+
+  log "escaneando $(contar "$vivos") hosts..."
+  awk '{print $1}' "$vivos" \
+    | nuclei -silent -severity low,medium,high,critical \
+             -o "${salida}/hallazgos.txt" || true
+
+  ok "$(contar "${salida}/hallazgos.txt") hallazgos en ${salida}/hallazgos.txt"
+}
+
+cmd_list() {
+  [[ -d "$BOUNTY_DIR" ]] || die "no existe $BOUNTY_DIR"
+
+  local base objetivo
+  for base in "$BOUNTY_DIR"/*/; do
+    [[ -d "$base" ]] || continue
+    objetivo="$(basename "$base")"
+    printf '%-24s %4s subdominios  %4s vivos  %4s hallazgos\n' \
+      "$objetivo" \
+      "$(contar "${base}recon/subdominios.txt")" \
+      "$(contar "${base}recon/vivos.txt")" \
+      "$(contar "${base}nuclei/hallazgos.txt")"
+  done
+}
+
+usage() {
+  cat <<EOF
+Uso: bb <comando> [objetivo]
+
+  new <objetivo>     crea la estructura y el scope.txt
+  recon <objetivo>   subdominios, resolución y hosts vivos
+  urls <objetivo>    URLs históricas y crawling
+  scan <objetivo>    nuclei sobre los hosts vivos
+  list               resumen de todos los objetivos
+
+Todo se filtra contra scope.txt: lo que no está dentro, no se toca.
+Los objetivos viven en \$BOUNTY_DIR (por defecto ~/bounty).
+EOF
+}
+
+main() {
+  local comando="${1:-}"
+  [[ $# -gt 0 ]] && shift
+
+  case "$comando" in
+    new)   cmd_new "$@" ;;
+    recon) cmd_recon "$@" ;;
+    urls)  cmd_urls "$@" ;;
+    scan)  cmd_scan "$@" ;;
+    list)  cmd_list "$@" ;;
+    ""|-h|--help) usage ;;
+    *) die "comando desconocido: $comando (usa --help)" ;;
+  esac
+}
+
+main "$@"

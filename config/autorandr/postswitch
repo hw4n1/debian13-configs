@@ -2,4 +2,8 @@
 
 sleep 0.5
 
+# Al cambiar el layout X redimensiona la ventana raiz y el pixmap viejo se
+# queda corto: las pantallas nuevas salen en negro hasta repintar el fondo.
+feh --bg-scale ~/.config/wallpapers/angel.jpg
+
 ~/.config/polybar/launch.sh

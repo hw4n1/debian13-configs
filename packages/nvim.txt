@@ -1,0 +1,10 @@
+# Lo que Neovim necesita fuera de si mismo.
+# El binario de nvim no viene de apt: trixie trae 0.10.4 y telescope
+# exige >0.10.4. Lo instala modules/editor.sh desde el tarball upstream.
+
+# El servidor LSP de C: sin el, nvim no salta a definiciones del kernel
+clangd
+# Busqueda: telescope usa ripgrep tanto para grep como para listar ficheros
+ripgrep
+# Portapapeles del sistema bajo X11 (i3); sin esto "+y no sale de nvim
+xclip

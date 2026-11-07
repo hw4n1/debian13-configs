@@ -7,6 +7,55 @@ die()  { printf '[x] %s\n' "$*" >&2; exit 1; }
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+APT_SOURCES_DEB822="/etc/apt/sources.list.d/debian.sources"
+APT_SOURCES_LEGACY="/etc/apt/sources.list"
+
+apt_sources_file() {
+  if [[ -f "$APT_SOURCES_DEB822" ]]; then
+    printf '%s' "$APT_SOURCES_DEB822"
+  elif [[ -s "$APT_SOURCES_LEGACY" ]]; then
+    printf '%s' "$APT_SOURCES_LEGACY"
+  else
+    return 1
+  fi
+}
+
+apt_sources_is_deb822() {
+  [[ "$1" == "$APT_SOURCES_DEB822" ]]
+}
+
+edit_apt_sources() {
+  local fuentes="$1" patron="$2" ya_aplicado="$3" descripcion="$4"
+
+  if grep -qE "$ya_aplicado" "$fuentes"; then
+    ok "$descripcion ya habilitado en $fuentes"
+    return 0
+  fi
+
+  log "habilitando $descripcion en $fuentes"
+  sudo cp "$fuentes" "$(backup_path "$fuentes")"
+  sudo sed -i -E "$patron" "$fuentes"
+
+  if ! grep -qE "$ya_aplicado" "$fuentes"; then
+    warn "no pude habilitar $descripcion en $fuentes; revisalo a mano"
+    return 1
+  fi
+
+  log "actualizando indices de apt..."
+  sudo apt-get update -qq
+  ok "$descripcion habilitado"
+}
+
+ruta_corta() {
+  local ruta="$1"
+
+  if [[ "$ruta" == "$HOME"/* ]]; then
+    printf '~%s' "${ruta#"$HOME"}"
+  else
+    printf '%s' "$ruta"
+  fi
+}
+
 pkg_installed() {
   dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"
 }
